@@ -27,12 +27,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default="../frontend/lib/types/generated/backend.ts",
+        default="../frontend/lib/api/generated.ts",
         help="Output path for generated TypeScript definitions.",
     )
     parser.add_argument(
         "--generator-cmd",
-        default="npx openapi-typescript",
+        default="bunx openapi-typescript",
         help="Command used to generate TypeScript types from OpenAPI JSON.",
     )
     parser.add_argument(
