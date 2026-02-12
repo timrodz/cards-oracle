@@ -32,6 +32,7 @@ Use Python 3.12 and `uv`.
 - Run `uv run ruff check .` and `uv run mypy app` before opening a PR.
 - Use `pydantic` utilities anywhere you can. Create custom types often.
 - Use `loguru` as the logger.
+- Functions that have more than 1 parameter must declare named parameters (excluding `self`).
 
 ## Testing Guidelines
 

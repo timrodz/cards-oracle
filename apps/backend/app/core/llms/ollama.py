@@ -1,10 +1,8 @@
-from loguru import logger
-
 from app.core.llms.provider import LLMProvider
 
 
 class OllamaProvider(LLMProvider):
-    def __init__(self, model: str, timeout: int, endpoint: str | None) -> None:
+    def __init__(self, *, model: str, timeout: int, endpoint: str | None) -> None:
         try:
             import ollama  # type: ignore[import-not-found]
         except ImportError as exc:  # pragma: no cover - depends on install
@@ -23,7 +21,6 @@ class OllamaProvider(LLMProvider):
 
     def generate(self, prompt: str) -> str:
         try:
-            logger.info(f"Generate:{prompt}")
             result = self._client.generate(model=self._model, prompt=prompt)
         except Exception as exc:  # pragma: no cover - depends on runtime service state
             raise RuntimeError(f"ollama generate failed: {exc}") from exc
@@ -32,7 +29,6 @@ class OllamaProvider(LLMProvider):
 
     def stream(self, prompt: str):
         try:
-            logger.info(f"Stream:{prompt}")
             stream = self._client.chat(
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],

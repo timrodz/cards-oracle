@@ -17,7 +17,16 @@ I developed an MVP using a scryfall dataset for Magic: The Gathering cards, so t
 - Convert a JSON dataset to a Mongo collection
 - Generate embeddings + vector search indexes for any collection
 
-### 
+### RAG search powered by LLMs
+
+#### Supported
+
+- Ollama (Local installation)
+- Z.ai (API key)
+
+#### Incoming
+
+- Llama.cpp
 
 ## Development
 

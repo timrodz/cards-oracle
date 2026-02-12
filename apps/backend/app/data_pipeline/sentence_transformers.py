@@ -23,6 +23,7 @@ def load_transformer() -> SentenceTransformer:
         )
         model = SentenceTransformer(str(resolved_path), device=device)
     else:
+        # Attempts to download the model if not available
         logger.info(
             f"Loading embedding model: {model_name} (device={device}, path={model_path})"
         )
