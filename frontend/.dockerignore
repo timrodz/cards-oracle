@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+
+# Dev / CI
+.husky
+.git
+.gitignore
+.env
+env.example
+*.md
+.DS_Store
+.lintstagedrc.json

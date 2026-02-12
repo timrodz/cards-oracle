@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Docker overrides — these take precedence over backend/.env values
+      - PORT=${BACKEND_PORT:-8000}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/?directConnection=true}
+      - APP_CORS_ORIGINS=http://localhost:${FRONTEND_PORT:-3000}
+    depends_on:
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    env_file:
+      - ./frontend/.env
+    environment:
+      # Docker overrides
+      - PORT=${FRONTEND_PORT:-3000}
+      - NEXT_PUBLIC_API_BASE=http://localhost:${BACKEND_PORT:-8000}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGODB_DB:-mtg}
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

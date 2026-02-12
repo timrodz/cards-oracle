@@ -1,0 +1,21 @@
+# Python
+__pycache__
+app.egg-info
+*.pyc
+.mypy_cache
+.coverage
+htmlcov
+.venv
+
+# Large data (not needed in image)
+datasets
+models
+
+# Dev / docs
+docs
+.git
+.gitignore
+.env
+.env.example
+*.md
+.DS_Store
