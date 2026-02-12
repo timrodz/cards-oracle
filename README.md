@@ -12,21 +12,27 @@ I developed an MVP using a scryfall dataset for Magic: The Gathering cards, so t
 
 ## Features
 
-### MongoDB as the database
-
-- Convert a JSON dataset to a Mongo collection
-- Generate embeddings + vector search indexes for any collection
-
 ### RAG search powered by LLMs
 
 #### Supported
 
-- Ollama (Local installation)
+- Llama.cpp
+- Ollama
 - Z.ai (API key)
 
-#### Incoming
+#### Database: MongoDB
 
-- Llama.cpp
+- Convert a JSON dataset to a Mongo collection
+- Generate embeddings + vector search indexes for any collection
+
+#### Backend: Python + FastAPI
+
+- Runs all inference and training
+
+#### Frontend: NextJs
+
+- ElevenLabs SDK for real-time calling
+- Consumes the backend API
 
 ## Development
 
@@ -50,15 +56,17 @@ I developed an MVP using a scryfall dataset for Magic: The Gathering cards, so t
 > fastapi dev app/main.py
 ```
 
-### Database
+### Database (MongoDB)
 
-Connect via `mongosh` or Mongo Compass
+Spin up the MongoDB instance with `docker compose`, as it requires a specific deployment that isn't compatible with the generic mongo install. Then connect via `mongosh` or Mongo Compass to verify it works:
 
 ```bash
-mongosh "mongodb://user:pass@localhost:27018/?directConnection=true"
+mongosh "mongodb://user:pass@localhost:27017/?directConnection=true"
 ```
 
-## Build
+## Build the app
+
+If you just want to run the app, here's the easiest setup:
 
 ```bash
 > docker-compose up -d --build
