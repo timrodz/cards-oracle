@@ -16,6 +16,7 @@ An application that lets users retrieve data about Magic: The Gathering cards
 - One LLM provider:
   - Ollama (`ollama`) for local inference
   - Z.ai (`zai`) for hosted inference
+  - llama.cpp (`llama_cpp`) for local GGUF inference
 - Huggingface for transformers (via `uvx hf`)
 
 #### Transformer LLMs
@@ -58,6 +59,17 @@ LLM_MODEL_NAME="glm-4.7"
 LLM_ENDPOINT="https://api.z.ai/api/paas/v4/"
 LLM_API_KEY="<your-api-key>"
 ```
+
+llama.cpp setup:
+
+```bash
+LLM_PROVIDER="llama_cpp"
+LLM_MODEL_NAME="Llama-3.1-8B-Instruct-Q4_K_M"
+LLM_MODEL_PATH="/absolute/or/relative/path/to/model.gguf"
+LLM_CONTEXT_WINDOW_TOKENS=4096
+```
+
+`LLM_MODEL_NAME` is the model identifier. `LLM_MODEL_PATH` is the local `.gguf` file path and is required for `llama_cpp`.
 
 ### Installation
 
@@ -188,7 +200,7 @@ Index 'vector_index' deleted
 
 ![image](docs/architecture/data-retrieval-pipeline.png)
 
-Use the local Sentence Transformers embedder for the query, run vector search, and have Ollama answer with retrieved context:
+Use the local Sentence Transformers embedder for the query, run vector search, and have the configured LLM provider answer with retrieved context:
 
 ```bash
 > python -m app.core.rag.search "Which cards care about Phyrexians?"

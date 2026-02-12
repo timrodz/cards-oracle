@@ -31,7 +31,7 @@ def test_generate_returns_first_choice_message_content(
 
     _install_fake_zai_module(monkeypatch, FakeClient)
 
-    provider = ZaiProvider("glm-4.7", 60, None, "test-key")
+    provider = ZaiProvider("test-key", model="glm-4.7", timeout=60)
     assert provider.generate("test prompt") == "hello from zai"
 
 
@@ -63,7 +63,7 @@ def test_stream_yields_only_non_empty_delta_content(
 
     _install_fake_zai_module(monkeypatch, FakeClient)
 
-    provider = ZaiProvider("glm-4.7", 60, None, "test-key")
+    provider = ZaiProvider("test-key", model="glm-4.7", timeout=60)
     assert list(provider.stream("test prompt")) == ["foo", "bar"]
 
 
@@ -76,7 +76,7 @@ def test_missing_api_key_raises_clear_error(monkeypatch: pytest.MonkeyPatch) -> 
 
     _install_fake_zai_module(monkeypatch, FakeClient)
     with pytest.raises(RuntimeError, match="LLM_API_KEY is required"):
-        ZaiProvider("glm-4.7", 60, None, None)
+        ZaiProvider("", model="glm-4.7")
 
 
 def test_generate_wraps_sdk_errors(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -91,7 +91,7 @@ def test_generate_wraps_sdk_errors(monkeypatch: pytest.MonkeyPatch) -> None:
 
     _install_fake_zai_module(monkeypatch, FakeClient)
 
-    provider = ZaiProvider("glm-4.7", 60, None, "test-key")
+    provider = ZaiProvider("test-key", model="glm-4.7", timeout=60)
     with pytest.raises(RuntimeError, match="zai generate failed: boom"):
         provider.generate("test prompt")
 
@@ -115,6 +115,6 @@ def test_stream_wraps_iteration_errors(monkeypatch: pytest.MonkeyPatch) -> None:
 
     _install_fake_zai_module(monkeypatch, FakeClient)
 
-    provider = ZaiProvider("glm-4.7", 60, None, "test-key")
+    provider = ZaiProvider("test-key", model="glm-4.7", timeout=60)
     with pytest.raises(RuntimeError, match="zai chat stream failed: stream exploded"):
         list(provider.stream("test prompt"))

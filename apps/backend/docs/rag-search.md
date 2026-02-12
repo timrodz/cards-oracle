@@ -94,11 +94,16 @@ Key environment variables:
 - `VECTOR_EMBED_PATH` (default: `embeddings`)
 - `VECTOR_LIMIT` (default: `5`)
 - `RAG_MAX_CONTEXT_CHARS` (default: `4000`)
-- `LLM_PROVIDER` (required; `ollama` or `zai`)
-- `LLM_MODEL_NAME` (example for Ollama: `mistral`; example for Z.ai: `glm-4.7`)
+- `LLM_PROVIDER` (required; `ollama`, `zai`, or `llama_cpp`)
+- `LLM_MODEL_NAME` (model identifier, e.g. `mistral`, `glm-4.7`, `Llama-3.1-8B-Instruct-Q4_K_M`)
+- `LLM_MODEL_PATH` (required when `LLM_PROVIDER=llama_cpp`; local `.gguf` path)
 - `LLM_TIMEOUT_SECONDS` (default: `120`)
+- `LLM_CONTEXT_WINDOW_TOKENS` (default: `4096`; used by `llama_cpp` as `n_ctx`)
 - `LLM_ENDPOINT` (optional override; Ollama example: `http://127.0.0.1:11434`, Z.ai example: `https://api.z.ai/api/paas/v4/`)
 - `LLM_API_KEY` (required when `LLM_PROVIDER=zai`)
+
+Provider notes:
+- `llama_cpp` uses local in-process inference and ignores `LLM_ENDPOINT`.
 
 Note on search tuning:
 

@@ -1,11 +1,11 @@
-from typing import Any, Iterator
+from typing import Any, Iterator, Optional
 
 from app.core.llms.provider import LLMProvider
 
 
 class ZaiProvider(LLMProvider):
     def __init__(
-        self, model: str, timeout: int, endpoint: str | None, api_key: str | None
+        self, api_key: str | None, *, model: str, timeout: Optional[int] = None
     ) -> None:
         try:
             from zai import ZaiClient  # type: ignore[import-not-found]
@@ -15,14 +15,7 @@ class ZaiProvider(LLMProvider):
         if not api_key:
             raise RuntimeError("LLM_API_KEY is required for LLM_PROVIDER=zai")
 
-        if endpoint:
-            self._client = ZaiClient(
-                api_key=api_key,
-                base_url=endpoint,
-                timeout=timeout,
-            )
-        else:
-            self._client = ZaiClient(api_key=api_key, timeout=timeout)
+        self._client = ZaiClient(api_key=api_key, timeout=timeout)
         self._model = model
 
     def generate(self, prompt: str) -> str:

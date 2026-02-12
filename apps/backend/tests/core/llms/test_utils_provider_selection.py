@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -15,11 +16,13 @@ def test_get_llm_provider_selects_ollama(monkeypatch: pytest.MonkeyPatch) -> Non
         SimpleNamespace(
             provider="ollama",
             model_name="mistral",
+            model_path=None,
             timeout_seconds=60,
+            context_window_tokens=4096,
             endpoint=None,
         ),
     )
-    monkeypatch.setattr(utils, "OllamaProvider", lambda *_args: expected)
+    monkeypatch.setattr(utils, "OllamaProvider", lambda **_kwargs: expected)
 
     assert utils.get_llm_provider() is expected
 
@@ -32,12 +35,35 @@ def test_get_llm_provider_selects_zai(monkeypatch: pytest.MonkeyPatch) -> None:
         SimpleNamespace(
             provider="zai",
             model_name="glm-4.7",
+            model_path=None,
             timeout_seconds=60,
-            endpoint="https://api.z.ai/api/paas/v4/",
-            zai_api_key="test-key",
+            context_window_tokens=4096,
+            llm_api_key="test-key",
         ),
     )
-    monkeypatch.setattr(utils, "ZaiProvider", lambda *_args: expected)
+    monkeypatch.setattr(utils, "ZaiProvider", lambda *_args, **_kwargs: expected)
+
+    assert utils.get_llm_provider() is expected
+
+
+def test_get_llm_provider_selects_llama_cpp(monkeypatch: pytest.MonkeyPatch) -> None:
+    expected = object()
+    monkeypatch.setattr(
+        utils,
+        "llm_settings",
+        SimpleNamespace(
+            provider="llama_cpp",
+            model_name="llama-3.1-8b-instruct-q4",
+            model_path="/tmp/model.gguf",
+            timeout_seconds=60,
+            context_window_tokens=4096,
+            endpoint=None,
+            llm_api_key=None,
+        ),
+    )
+    monkeypatch.setattr(
+        utils, "LlamaCppProvider", lambda *_args, **_kwargs: expected
+    )
 
     assert utils.get_llm_provider() is expected
 
@@ -51,8 +77,11 @@ def test_get_llm_provider_unsupported_provider_raises(
         SimpleNamespace(
             provider="unknown",
             model_name="x",
+            model_path=None,
             timeout_seconds=60,
+            context_window_tokens=4096,
             endpoint=None,
+            llm_api_key=None,
         ),
     )
 
@@ -65,3 +94,30 @@ def test_settings_requires_llm_provider(monkeypatch: pytest.MonkeyPatch) -> None
 
     with pytest.raises(ValidationError, match="llm_provider"):
         Settings(_env_file=None)
+
+
+def test_settings_expanduser_for_embedding_model_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", "/tmp/test-home")
+    settings = Settings(
+        _env_file=None,
+        llm_provider="ollama",
+        embedding_transformer_model_path="~/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2",
+    )
+
+    assert settings.embedding_transformer_model_path == Path(
+        "/tmp/test-home/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2"
+    )
+
+
+def test_settings_allow_relative_embedding_model_path() -> None:
+    settings = Settings(
+        _env_file=None,
+        llm_provider="ollama",
+        embedding_transformer_model_path="models/sentence-transformers/all-MiniLM-L6-v2",
+    )
+
+    assert settings.embedding_transformer_model_path == Path(
+        "models/sentence-transformers/all-MiniLM-L6-v2"
+    )

@@ -13,8 +13,13 @@ def _validate_json_file_type(value: Path) -> Path:
     return value
 
 
+def _expand_user_path(value: Path) -> Path:
+    return value.expanduser()
+
+
 JsonFilePath = Annotated[Path, AfterValidator(_validate_json_file_type)]
-LlmProviderName = Literal["ollama", "zai"]
+NormalizedPath = Annotated[Path, AfterValidator(_expand_user_path)]
+LlmProviderName = Literal["ollama", "zai", "llama_cpp"]
 
 
 class DatasetFileInput(BaseModel):
@@ -31,7 +36,7 @@ class DatabaseSettings(BaseModel):
 
 class EmbeddingSettings(BaseModel):
     transformer_model_name: str
-    transformer_model_path: Path
+    transformer_model_path: NormalizedPath
     transformer_dimensions: int
     vector_limit: int
 
@@ -40,8 +45,10 @@ class LlmSettings(BaseModel):
     rag_max_context_chars: int
     provider: LlmProviderName
     model_name: str
+    model_path: str | None
     endpoint: str | None
     timeout_seconds: int
+    context_window_tokens: int
     llm_api_key: str | None
 
 
@@ -68,7 +75,7 @@ class Settings(BaseSettings):
     mongodb_batch_size: int = 500
 
     embedding_transformer_model_name: str = "mixedbread-ai/mxbai-embed-xsmall-v1"
-    embedding_transformer_model_path: Path = Path(
+    embedding_transformer_model_path: NormalizedPath = Path(
         "models/mixedbread-ai/mxbai-embed-xsmall-v1"
     )
     embedding_transformer_model_dimensions: int = 384
@@ -77,8 +84,10 @@ class Settings(BaseSettings):
     llm_rag_max_context_chars: int = 4000
     llm_provider: LlmProviderName
     llm_model_name: str = "mistral"
+    llm_model_path: str | None = None
     llm_endpoint: str | None = None
     llm_timeout_seconds: int = 120
+    llm_context_window_tokens: int = 4096
     llm_api_key: str | None = None
 
     @property
@@ -106,8 +115,10 @@ class Settings(BaseSettings):
             rag_max_context_chars=self.llm_rag_max_context_chars,
             provider=self.llm_provider,
             model_name=self.llm_model_name,
+            model_path=self.llm_model_path,
             endpoint=self.llm_endpoint,
             timeout_seconds=self.llm_timeout_seconds,
+            context_window_tokens=self.llm_context_window_tokens,
             llm_api_key=self.llm_api_key,
         )
 
