@@ -6,7 +6,6 @@ Eventually it will become a generic resource getter, where you can pass the name
 import asyncio
 import json
 import re
-from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 
@@ -36,13 +35,11 @@ def _normalize_card_id(raw_id: str) -> str:
 
 
 @router.get("/{id}", response_model=ScryfallCardRecord)
-async def fetch_card(id: str) -> Dict[str, Any]:
+async def fetch_card(id: str) -> ScryfallCardRecord:
 
     normalized_id = _normalize_card_id(id)
     query = {"_id": normalized_id}
     card = await asyncio.to_thread(database.cards_collection.find_one, query)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
-    return ScryfallCardRecord.model_validate(card).model_dump(
-        by_alias=True, exclude_none=True
-    )
+    return ScryfallCardRecord.model_validate(card)

@@ -1,21 +1,28 @@
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.params import Query
 from loguru import logger
 
 from app.data_pipeline.dataset_ingest_json import DatasetIngestJSON
+from app.models.api import IngestJsonDatasetParams, OperationMessageResponse
 
 router = APIRouter(prefix="/ingest", tags=["Data pipeline"])
 
 
-@router.post("/json-dataset")
-async def ingest_json_dataset(
+def _ingest_json_dataset_params(
     collection: Annotated[str, Form()],
-    file: Annotated[UploadFile, File()],
     limit: Annotated[int | None, Query()] = None,
-):
-    logger.info(f"Ingesting JSON dataset into collection: {collection}")
+) -> IngestJsonDatasetParams:
+    return IngestJsonDatasetParams(collection=collection, limit=limit)
+
+
+@router.post("/json-dataset", response_model=OperationMessageResponse)
+async def ingest_json_dataset(
+    params: Annotated[IngestJsonDatasetParams, Depends(_ingest_json_dataset_params)],
+    file: Annotated[UploadFile, File()],
+) -> OperationMessageResponse:
+    logger.info(f"Ingesting JSON dataset into collection: {params.collection}")
 
     if not file.filename:
         # Should not happen with UploadFile unless client behaves weirdly
@@ -33,9 +40,11 @@ async def ingest_json_dataset(
         file.file.seek(0)
 
         ingestion.run_pipeline(
-            file_obj=file.file, collection_name=collection, limit=limit
+            file_obj=file.file, collection_name=params.collection, limit=params.limit
         )
-        return {"message": "Dataset ingestion completed successfully."}
+        return OperationMessageResponse(
+            message="Dataset ingestion completed successfully."
+        )
     except Exception as e:
         logger.error(f"Ingestion failed: {e}")
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")

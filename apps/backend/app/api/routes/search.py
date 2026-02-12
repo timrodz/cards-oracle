@@ -1,15 +1,20 @@
 import asyncio
 import json
-from typing import Annotated, Any, Dict
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import TypeAdapter, ValidationError
 from starlette.concurrency import iterate_in_threadpool
 from typing_extensions import Iterator
 
 from app.core.rag.search import RagSearch
-from app.models.api import SearchResponse, StreamErrorEvent, StreamEvent
+from app.models.api import (
+    SearchQueryParams,
+    SearchResponse,
+    StreamErrorEvent,
+    StreamEvent,
+)
 
 router = APIRouter(prefix="/search", tags=["RAG"])
 
@@ -18,7 +23,17 @@ stream_event_adapter: TypeAdapter[StreamEvent] = TypeAdapter(StreamEvent)
 rag_search = RagSearch()
 
 
-def _encode_event_stream(event: Dict[str, Any]) -> str:
+def _search_query_params(
+    question: Annotated[str, Query(..., min_length=1)],
+    normalize_embeddings: Annotated[bool, Query()] = True,
+) -> SearchQueryParams:
+    return SearchQueryParams(
+        question=question,
+        normalize_embeddings=normalize_embeddings,
+    )
+
+
+def _encode_event_stream(event: dict[str, Any]) -> str:
     try:
         validated_event = stream_event_adapter.validate_python(event)
         payload = json.dumps(validated_event.model_dump(exclude_none=True))
@@ -39,22 +54,24 @@ def _search_rag_stream(query: str, normalize_embeddings: bool) -> Iterator[str]:
 
 @router.get("/", response_model=SearchResponse)
 async def search(
-    question: Annotated[str, Query(..., min_length=1)],
-    normalize_embeddings: Annotated[bool, Query()] = True,
-) -> Dict[str, Any]:
+    params: Annotated[SearchQueryParams, Depends(_search_query_params)],
+) -> SearchResponse:
     result = await asyncio.to_thread(
-        rag_search.search, question, normalize_embeddings=normalize_embeddings
+        rag_search.search,
+        params.question,
+        normalize_embeddings=params.normalize_embeddings,
     )
-    return SearchResponse.model_validate(result).model_dump(exclude_none=True)
+    return SearchResponse.model_validate(result)
 
 
-# TODO: response_model for streamed endpoint
 @router.get("/stream")
 async def stream_search(
-    question: Annotated[str, Query(..., min_length=1)],
-    normalize_embeddings: Annotated[bool, Query()] = True,
+    params: Annotated[SearchQueryParams, Depends(_search_query_params)],
 ) -> StreamingResponse:
-    stream = _search_rag_stream(question, normalize_embeddings=normalize_embeddings)
+    stream = _search_rag_stream(
+        params.question,
+        normalize_embeddings=params.normalize_embeddings,
+    )
     return StreamingResponse(
         iterate_in_threadpool(stream), media_type="text/event-stream"
     )

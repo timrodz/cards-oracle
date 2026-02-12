@@ -2,7 +2,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
 
-from loguru import logger
 from pydantic import AfterValidator, BaseModel, MongoDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -140,5 +139,3 @@ app_settings = _settings.app_settings
 db_settings = _settings.database_settings
 transformer_settings = _settings.transformer_settings
 llm_settings = _settings.llm_settings
-
-logger.debug(_settings)

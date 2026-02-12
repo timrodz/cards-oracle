@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.api.main import api_router
 from app.core.config import app_settings
+from app.models.api import HealthCheckResponse
 
 app = FastAPI(title="Card Oracle")
 
@@ -28,9 +29,9 @@ if origins:
 
 
 # Configure a basic health-check endpoint
-@app.get("/")
-def health_check():
-    return {"Hello": "World"}
+@app.get("/", response_model=HealthCheckResponse)
+def health_check() -> HealthCheckResponse:
+    return HealthCheckResponse(Hello="World")
 
 
 app.include_router(api_router)
