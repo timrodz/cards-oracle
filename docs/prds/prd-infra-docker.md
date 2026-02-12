@@ -30,3 +30,15 @@ Scope
 - Provider: MongoDB cluster
 - Mongo version: 8.2.4
 - Atlas CLI: 1.52.0
+
+## Post-setup notes
+
+### Backend
+
+#### 1. `__pycache__`
+
+When `uv sync` resolves the project and installs it (the `--no-install-project` flag is only on the first `uv sync`), Python compiles `.py` files into `.pyc` bytecode, generating fresh `__pycache__` directories inside the builder stage. Then in the runtime stage:
+
+This copies the entire `/app` directory — including those newly generated `__pycache__` dirs — into the final image.
+
+This is harmless: they're just bytecode caches and actually make startup marginally faster.
