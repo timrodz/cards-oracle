@@ -33,6 +33,35 @@ class CreateJsonEmbeddingParams(BaseModel):
     normalize: bool = True
 
 
+EmbeddingsJobStatus = Literal[
+    "queued",
+    "running",
+    "succeeded",
+    "failed",
+    "failed_submission",
+]
+
+
+class CreateEmbeddingsJobResponse(BaseModel):
+    message: str
+    job_id: str
+    status: EmbeddingsJobStatus
+    dagster_run_id: str
+
+
+class GetEmbeddingsJobResponse(BaseModel):
+    job_id: str
+    status: EmbeddingsJobStatus
+    dagster_run_id: str
+    dagster_status: str | None = None
+    source_collection: str
+    target_collection: str
+    chunk_mappings: str | None = None
+    limit: int | None = None
+    normalize: bool = True
+    error: str | None = None
+
+
 class CreateSearchIndexParams(BaseModel):
     collection_name: str = Field(min_length=1)
     collection_embeddings_field: str = Field(min_length=1)
