@@ -1,13 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, status
 from loguru import logger
 
 from app.core.chunk_mappings import extract_chunk_mapping_fields
 from app.core.db import database
-from app.data_pipeline.create_embeddings import Embeddings
+from app.core.embeddings_jobs import embeddings_job_service
 from app.models.api import (
+    CreateEmbeddingsJobResponse,
     CreateJsonEmbeddingParams,
+    GetEmbeddingsJobResponse,
     CreateSearchIndexParams,
     OperationMessageResponse,
 )
@@ -44,10 +46,14 @@ def _create_search_index_params(
     )
 
 
-@router.post("", response_model=OperationMessageResponse)
+@router.post(
+    "",
+    response_model=CreateEmbeddingsJobResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def create_embeddings(
     params: Annotated[CreateJsonEmbeddingParams, Depends(_create_embeddings_params)],
-) -> OperationMessageResponse:
+) -> CreateEmbeddingsJobResponse:
     logger.info(
         "Starting embeddings creation: "
         f"source={params.source_collection}, target={params.target_collection}"
@@ -74,18 +80,7 @@ async def create_embeddings(
                     ),
                 )
 
-        embeddings = Embeddings()
-        # Synchronous call as requested for MVP, though long-running
-        embeddings.run_pipeline(
-            source_collection=params.source_collection,
-            target_collection=params.target_collection,
-            chunk_mappings=params.chunk_mappings,
-            limit=params.limit,
-            normalize=params.normalize,
-        )
-        return OperationMessageResponse(
-            message="Embeddings creation completed successfully."
-        )
+        return embeddings_job_service.submit_job(params=params)
     except HTTPException:
         raise
     except ValueError as e:
@@ -95,6 +90,14 @@ async def create_embeddings(
         raise HTTPException(
             status_code=500, detail=f"Embeddings creation failed: {str(e)}"
         )
+
+
+@router.get("/jobs/{job_id}", response_model=GetEmbeddingsJobResponse)
+async def get_embeddings_job(job_id: str) -> GetEmbeddingsJobResponse:
+    response = embeddings_job_service.get_job(job_id=job_id)
+    if response is None:
+        raise HTTPException(status_code=404, detail="Embeddings job not found.")
+    return response
 
 
 @router.post("/search_index", response_model=OperationMessageResponse)
