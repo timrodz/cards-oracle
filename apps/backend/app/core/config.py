@@ -56,6 +56,11 @@ class AppSettings(BaseModel):
     embeddings_max_workers: int
 
 
+class DagsterSettings(BaseModel):
+    home: NormalizedPath
+    embeddings_max_workers: int
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -66,6 +71,9 @@ class Settings(BaseSettings):
 
     app_cors_origins: str = "http://localhost:3000"
     app_embeddings_max_workers: int = 4
+
+    dagster_home: NormalizedPath = Path(".dagster")
+    dagster_embeddings_max_workers: int = 2
 
     mongodb_uri: MongoDsn = MongoDsn("mongodb://localhost:27017/?directConnection=true")
     mongodb_db_name: str = "mtg"
@@ -128,6 +136,13 @@ class Settings(BaseSettings):
             embeddings_max_workers=self.app_embeddings_max_workers,
         )
 
+    @property
+    def dagster_settings(self) -> DagsterSettings:
+        return DagsterSettings(
+            home=self.dagster_home,
+            embeddings_max_workers=self.dagster_embeddings_max_workers,
+        )
+
 
 @lru_cache
 def _get_settings() -> Settings:
@@ -136,6 +151,7 @@ def _get_settings() -> Settings:
 
 _settings = _get_settings()
 app_settings = _settings.app_settings
+dagster_settings = _settings.dagster_settings
 db_settings = _settings.database_settings
 transformer_settings = _settings.transformer_settings
 llm_settings = _settings.llm_settings
