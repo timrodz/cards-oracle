@@ -5,6 +5,8 @@ description = "A FastAPI backend application that helps users find cards for MTG
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dagster>=1.12.14",
+    "dagster-webserver>=1.12.14",
     "fastapi[standard]>=0.128.7",
     "llama-cpp-python>=0.3.16",
     "loguru>=0.7.3",
