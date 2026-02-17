@@ -1,10 +1,11 @@
 import re
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 
 from loguru import logger
 from pymongo import ReplaceOne
 
+from app.core.chunk_mappings import render_chunk_mapping
 from app.core.config import app_settings, db_settings
 from app.core.db import database
 from app.data_pipeline.sentence_transformers import (
@@ -15,7 +16,7 @@ from app.models.db import CardEmbeddingRecord, ScryfallCardRecord
 from app.models.scryfall import ScryfallCardFace
 
 
-def _process_and_upsert_batch(
+def _process_and_upsert_batch_embeddings(
     records: List[CardEmbeddingRecord], collection_name: str, normalize_embeddings: bool
 ) -> None:
     """
@@ -58,7 +59,7 @@ def _process_and_upsert_batch(
 class Embeddings:
     def __load_db_records(
         self, *, source_collection: str, limit: Optional[int]
-    ) -> Iterator[List[ScryfallCardRecord]]:
+    ) -> Iterator[list[dict[str, Any]]]:
         collection = database.get_collection(source_collection)
         cursor = collection.find()
 
@@ -67,7 +68,7 @@ class Embeddings:
 
         batch = []
         for card in cursor:
-            batch.append(ScryfallCardRecord.model_validate(card))
+            batch.append(card)
             if len(batch) >= db_settings.batch_size:
                 yield batch
                 batch = []
@@ -155,12 +156,32 @@ class Embeddings:
             summary=searchable_representation,
         )
 
+    def __build_chunk_mapping_embedding_record(
+        self, *, source_record: dict[str, Any], chunk_mappings: str
+    ) -> CardEmbeddingRecord | None:
+        mongo_id_raw = source_record.get("_id")
+        if mongo_id_raw is None:
+            return None
+
+        mongo_id = str(mongo_id_raw)
+        summary = render_chunk_mapping(
+            chunk_mappings=chunk_mappings,
+            source_record=source_record,
+        )
+
+        return CardEmbeddingRecord(
+            _id=mongo_id,
+            source_id=mongo_id,
+            summary=summary,
+        )
+
     def run_pipeline(
         self,
         *,
         source_collection: str,
         target_collection: str,
         limit: Optional[int],
+        chunk_mappings: str | None = None,
         normalize: bool = True,
     ) -> None:
         max_workers = app_settings.embeddings_max_workers
@@ -188,16 +209,35 @@ class Embeddings:
                 for db_record in record_batch:
                     total_records += 1
 
-                    # TODO: This will have to be a custom filtering function
-                    if self.__should_filter_out_empty_card(db_record):
-                        # logger.debug(f"Empty card {db_card.mongo_id}")
+                    if chunk_mappings is not None:
+                        record_to_embed = self.__build_chunk_mapping_embedding_record(
+                            source_record=db_record,
+                            chunk_mappings=chunk_mappings,
+                        )
+                        logger.debug(f"{db_record['_id']} {record_to_embed}")
+                    else:
+                        # TODO: This section will be removed in favor of data agnostic models
+                        try:
+                            scryfall_record = ScryfallCardRecord.model_validate(
+                                db_record
+                            )
+                        except Exception:
+                            total_invalid_records += 1
+                            continue
+
+                        # TODO: This will have to be a custom filtering function
+                        if self.__should_filter_out_empty_card(scryfall_record):
+                            total_invalid_records += 1
+                            continue
+
+                        record_to_embed = self.__build_scryfall_embedding_record(
+                            scryfall_record
+                        )
+
+                    if record_to_embed is None:
                         total_invalid_records += 1
                         continue
-
-                    embedding_record = self.__build_scryfall_embedding_record(db_record)
-                    if embedding_record is None:
-                        continue
-                    embeddings_to_process.append(embedding_record)
+                    embeddings_to_process.append(record_to_embed)
                     total_chunks += 1
 
                 if not embeddings_to_process:
@@ -205,7 +245,7 @@ class Embeddings:
 
                 # Submit to process pool
                 future = executor.submit(
-                    _process_and_upsert_batch,
+                    _process_and_upsert_batch_embeddings,
                     embeddings_to_process,
                     target_collection,
                     normalize,
