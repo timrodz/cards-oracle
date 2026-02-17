@@ -46,18 +46,23 @@ def test_create_embeddings_rejects_invalid_chunk_mapping_fields(monkeypatch) -> 
 def test_create_embeddings_accepts_valid_chunk_mapping_fields(monkeypatch) -> None:
     from app.api.routes import embeddings as embeddings_route
 
-    captured: dict = {}
-
     monkeypatch.setattr(
         embeddings_route.database,
         "get_collection_properties",
         lambda *, collection_name: ["_id", "name", "type_line"],
     )
 
-    def _fake_run_pipeline(self, **kwargs):
-        captured.update(kwargs)
+    def _fake_submit_job(*, params):
+        return {
+            "message": "Embeddings task accepted.",
+            "job_id": "job_123",
+            "status": "queued",
+            "dagster_run_id": "run_123",
+        }
 
-    monkeypatch.setattr(embeddings_route.Embeddings, "run_pipeline", _fake_run_pipeline)
+    monkeypatch.setattr(
+        embeddings_route.embeddings_job_service, "submit_job", _fake_submit_job
+    )
 
     client = TestClient(app)
     response = client.post(
@@ -70,7 +75,37 @@ def test_create_embeddings_accepts_valid_chunk_mapping_fields(monkeypatch) -> No
         },
     )
 
+    assert response.status_code == 202
+    body = response.json()
+    assert body["job_id"] == "job_123"
+    assert body["status"] == "queued"
+
+
+def test_get_embeddings_job_status(monkeypatch) -> None:
+    from app.api.routes import embeddings as embeddings_route
+
+    monkeypatch.setattr(
+        embeddings_route.embeddings_job_service,
+        "get_job",
+        lambda *, job_id: {
+            "job_id": job_id,
+            "status": "running",
+            "dagster_run_id": "run_123",
+            "dagster_status": "STARTED",
+            "source_collection": "cards",
+            "target_collection": "card_embeddings",
+            "chunk_mappings": None,
+            "limit": None,
+            "normalize": True,
+            "error": None,
+        },
+    )
+
+    client = TestClient(app)
+    response = client.get("/embeddings/jobs/job_123")
+
     assert response.status_code == 200
-    assert captured["source_collection"] == "cards"
-    assert captured["target_collection"] == "card_embeddings"
-    assert captured["chunk_mappings"] == "{name} - {type_line}"
+    body = response.json()
+    assert body["job_id"] == "job_123"
+    assert body["status"] == "running"
+    assert body["dagster_status"] == "STARTED"
