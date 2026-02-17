@@ -1,4 +1,4 @@
-from dagster import Field, job, op
+from dagster import Field, Noneable, job, op
 
 from app.data_pipeline.create_embeddings import Embeddings
 
@@ -7,8 +7,8 @@ from app.data_pipeline.create_embeddings import Embeddings
     config_schema={
         "source_collection": Field(str),
         "target_collection": Field(str),
-        "chunk_mappings": Field(str, is_required=False, default_value=None),
-        "limit": Field(int, is_required=False, default_value=None),
+        "chunk_mappings": Field(Noneable(str), is_required=False, default_value=None),
+        "limit": Field(Noneable(int), is_required=False, default_value=None),
         "normalize": Field(bool, default_value=True),
     }
 )
@@ -28,4 +28,3 @@ def create_embeddings_op(context) -> None:
 @job(name="create_embeddings_job")
 def create_embeddings_job():
     create_embeddings_op()
-
