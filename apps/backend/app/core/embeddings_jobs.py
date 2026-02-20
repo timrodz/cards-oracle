@@ -1,7 +1,5 @@
-import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -29,6 +27,9 @@ class EmbeddingsJobService:
         self._executor = ThreadPoolExecutor(
             max_workers=dagster_settings.embeddings_max_workers
         )
+
+    def shutdown(self, wait: bool = True) -> None:
+        self._executor.shutdown(wait=wait)
 
     def submit_job(
         self, *, params: CreateJsonEmbeddingParams
@@ -178,11 +179,9 @@ class EmbeddingsJobService:
 
 
 def _get_dagster_instance() -> DagsterInstance:
-    dagster_home = Path(dagster_settings.home)
+    dagster_home = dagster_settings.home
     dagster_home.mkdir(parents=True, exist_ok=True)
-    os.environ["DAGSTER_HOME"] = str(dagster_home)
-    return DagsterInstance.get()
+    return DagsterInstance.local_temp(tempdir=str(dagster_home))
 
 
 embeddings_job_service = EmbeddingsJobService()
-
