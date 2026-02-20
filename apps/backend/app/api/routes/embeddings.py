@@ -9,8 +9,8 @@ from app.core.embeddings_jobs import embeddings_job_service
 from app.models.api import (
     CreateEmbeddingsJobResponse,
     CreateJsonEmbeddingParams,
-    GetEmbeddingsJobResponse,
     CreateSearchIndexParams,
+    GetEmbeddingsJobResponse,
     OperationMessageResponse,
 )
 from app.models.embedding import Similarity
@@ -84,12 +84,12 @@ async def create_embeddings(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Embeddings creation failed: {e}")
         raise HTTPException(
             status_code=500, detail=f"Embeddings creation failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/jobs/{job_id}", response_model=GetEmbeddingsJobResponse)

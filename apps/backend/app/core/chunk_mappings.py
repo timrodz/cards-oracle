@@ -1,7 +1,6 @@
 import re
 from typing import Any
 
-
 FIELD_TOKEN_PATTERN = re.compile(r"\{([A-Za-z_][A-Za-z0-9_.]*)\}")
 
 
@@ -20,7 +19,7 @@ def render_chunk_mapping(*, chunk_mappings: str, source_record: dict[str, Any]) 
         literal_segment = chunk_mappings[current_pos:start]
         field_name = match.group(1)
 
-        output_parts.append(escape_sql_literal(value=literal_segment))
+        output_parts.append(escape_template_literal(value=literal_segment))
 
         field_value = _get_nested_value(
             source_record=source_record, field_name=field_name
@@ -28,11 +27,11 @@ def render_chunk_mapping(*, chunk_mappings: str, source_record: dict[str, Any]) 
         output_parts.append("" if field_value is None else str(field_value))
         current_pos = end
 
-    output_parts.append(escape_sql_literal(value=chunk_mappings[current_pos:]))
+    output_parts.append(escape_template_literal(value=chunk_mappings[current_pos:]))
     return "".join(output_parts)
 
 
-def escape_sql_literal(*, value: str) -> str:
+def escape_template_literal(*, value: str) -> str:
     # Escapes characters commonly used to break out of SQL string literals.
     return (
         value.replace("\\", "\\\\")
@@ -52,9 +51,7 @@ def _validate_chunk_mapping_syntax(*, chunk_mappings: str) -> None:
         )
 
 
-def _get_nested_value(
-    *, source_record: dict[str, Any], field_name: str
-) -> Any | None:
+def _get_nested_value(*, source_record: dict[str, Any], field_name: str) -> Any | None:
     current: Any = source_record
     for part in field_name.split("."):
         if not isinstance(current, dict):

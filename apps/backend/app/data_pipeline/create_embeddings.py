@@ -1,6 +1,7 @@
 import re
+from collections.abc import Iterator
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import Any, Iterator, List, Optional
+from typing import Any, Optional
 
 from loguru import logger
 from pymongo import ReplaceOne
@@ -17,7 +18,7 @@ from app.models.scryfall import ScryfallCardFace
 
 
 def _process_and_upsert_batch_embeddings(
-    records: List[CardEmbeddingRecord], collection_name: str, normalize_embeddings: bool
+    records: list[CardEmbeddingRecord], collection_name: str, normalize_embeddings: bool
 ) -> None:
     """
     Top-level function for ProcessPoolExecutor.
@@ -125,7 +126,7 @@ class Embeddings:
         price_usd = card.prices.usd
         set_name = card.set_name
 
-        cost_parts: List[str] = []
+        cost_parts: list[str] = []
         if mana_cost:
             cost_parts.append(f"Cost: {mana_cost}")
         if cmc is not None:

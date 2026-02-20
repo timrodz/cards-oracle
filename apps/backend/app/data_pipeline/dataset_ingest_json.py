@@ -1,5 +1,6 @@
 import json
-from typing import IO, Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import IO, Any, Dict, Optional
 
 from loguru import logger
 from pydantic import ValidationError
@@ -19,7 +20,7 @@ class DatasetIngestJSON:
             raise ValueError(f"Expected single record, got {type(data)}")
         return data
 
-    def __load_json_file_as_list(self, file_obj: IO) -> List[Dict[str, Any]]:
+    def __load_json_file_as_list(self, file_obj: IO) -> list[Dict[str, Any]]:
         logger.info("Loading dataset from stream into list of JSON records")
 
         data = json.load(file_obj)
@@ -28,7 +29,7 @@ class DatasetIngestJSON:
         return data
 
     def __parse_dataset(
-        self, dataset: List[Dict[str, Any]], *, limit: Optional[int]
+        self, dataset: list[Dict[str, Any]], *, limit: Optional[int]
     ) -> Iterator[ScryfallCard]:
         """
         Converts objects of the same data shape into an iterable class
@@ -50,7 +51,7 @@ class DatasetIngestJSON:
                 return
 
     def __upsert_records(
-        self, *, records: List[ScryfallCard], collection_name: str
+        self, *, records: list[ScryfallCard], collection_name: str
     ) -> bool:
         """
         TODO:
@@ -83,7 +84,7 @@ class DatasetIngestJSON:
         """
 
         total_records_processed = 0
-        record_batch: List[ScryfallCard] = []
+        record_batch: list[ScryfallCard] = []
 
         dataset = self.__load_json_file_as_list(file_obj)
         for parsed_record in self.__parse_dataset(dataset, limit=limit):

@@ -1,12 +1,12 @@
 import asyncio
 import json
+from collections.abc import Iterator
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import TypeAdapter, ValidationError
 from starlette.concurrency import iterate_in_threadpool
-from typing_extensions import Iterator
 
 from app.core.rag.search import RagSearch
 from app.models.api import (

@@ -1,6 +1,5 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import List
 
 import torch as torch_module
 from loguru import logger
@@ -38,7 +37,7 @@ def embed_text(
     model: SentenceTransformer,
     text: str,
     normalize: bool,
-) -> List[float]:
+) -> list[float]:
     embeddings = model.encode(
         text,
         show_progress_bar=False,
