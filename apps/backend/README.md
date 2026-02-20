@@ -66,3 +66,12 @@ Run the FastAPI server:
 ```
 
 Navigate to `localhost:8000/docs` and use the endpoints there :)
+
+### Dagster UI
+
+When running through the root `docker-compose.yml`, Dagster services are also started:
+
+- Web UI: `http://localhost:3001`
+- Daemon: background orchestration process
+
+The backend and Dagster services share the same `DAGSTER_HOME` (`/app/.dagster` in containers), so runs triggered from `POST /embeddings` appear in the Dagster UI.

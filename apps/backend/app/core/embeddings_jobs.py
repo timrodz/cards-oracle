@@ -181,7 +181,11 @@ class EmbeddingsJobService:
 def _get_dagster_instance() -> DagsterInstance:
     dagster_home = dagster_settings.home
     dagster_home.mkdir(parents=True, exist_ok=True)
-    return DagsterInstance.local_temp(tempdir=str(dagster_home))
+    dagster_config_path = dagster_home / "dagster.yaml"
+    if not dagster_config_path.exists():
+        raise RuntimeError(f"Missing Dagster config file: {dagster_config_path}")
+
+    return DagsterInstance.from_config(config_dir=str(dagster_home))
 
 
 embeddings_job_service = EmbeddingsJobService()

@@ -9,3 +9,6 @@ __pycache__
 /datasets
 /models
 /logs
+
+/.dagster/*
+!/.dagster/dagster.yaml
