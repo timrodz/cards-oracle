@@ -46,28 +46,6 @@ def test_get_llm_provider_selects_zai(monkeypatch: pytest.MonkeyPatch) -> None:
     assert utils.get_llm_provider() is expected
 
 
-def test_get_llm_provider_selects_llama_cpp(monkeypatch: pytest.MonkeyPatch) -> None:
-    expected = object()
-    monkeypatch.setattr(
-        utils,
-        "llm_settings",
-        SimpleNamespace(
-            provider="llama_cpp",
-            model_name="llama-3.1-8b-instruct-q4",
-            model_path="/tmp/model.gguf",
-            timeout_seconds=60,
-            context_window_tokens=4096,
-            endpoint=None,
-            llm_api_key=None,
-        ),
-    )
-    monkeypatch.setattr(
-        utils, "LlamaCppProvider", lambda *_args, **_kwargs: expected
-    )
-
-    assert utils.get_llm_provider() is expected
-
-
 def test_get_llm_provider_unsupported_provider_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

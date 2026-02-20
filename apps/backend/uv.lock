@@ -593,6 +593,7 @@ dependencies = [
     { name = "mypy" },
     { name = "ollama" },
     { name = "pydantic" },
+    { name = "pydantic-mongo" },
     { name = "pydantic-settings" },
     { name = "pydantic-to-typescript" },
     { name = "pymongo" },
@@ -609,6 +610,7 @@ requires-dist = [
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "ollama", specifier = ">=0.6.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
+    { name = "pydantic-mongo", specifier = ">=3.1.0" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pydantic-to-typescript", specifier = ">=2.0.0" },
     { name = "pymongo", specifier = ">=4.16.0" },
@@ -1006,6 +1008,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fd/35/2fee58b1316a73e025728583d3b1447218a97e621933fc776fb8c0f2ebdd/pydantic_extra_types-2.11.0.tar.gz", hash = "sha256:4e9991959d045b75feb775683437a97991d02c138e00b59176571db9ce634f0e", size = 157226, upload-time = "2025-12-31T16:18:27.944Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/17/fabd56da47096d240dd45ba627bead0333b0cf0ee8ada9bec579287dadf3/pydantic_extra_types-2.11.0-py3-none-any.whl", hash = "sha256:84b864d250a0fc62535b7ec591e36f2c5b4d1325fa0017eb8cda9aeb63b374a6", size = 74296, upload-time = "2025-12-31T16:18:26.38Z" },
+]
+
+[[package]]
+name = "pydantic-mongo"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pymongo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ef/03/b65f84f0d71164a873ec3e1a7ea1d0db8934b9b81463c8d6196f93d8c722/pydantic_mongo-3.1.0.tar.gz", hash = "sha256:e29851c893d572d26d99b5cdd83282ac0d40439829357ad45bdb4d4477120eae", size = 14836, upload-time = "2025-04-18T02:26:10.908Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/6e/3d03197ea58bb5d05324b1781d9d1a1ffe54b0999f1178a09edb611969c0/pydantic_mongo-3.1.0-py2.py3-none-any.whl", hash = "sha256:e94eaff4a73ad1d6cbcb617ed618fca1a31b870ea82d765736bf0c0774ac68d7", size = 14491, upload-time = "2025-04-18T02:26:09.547Z" },
 ]
 
 [[package]]

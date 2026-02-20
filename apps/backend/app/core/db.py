@@ -21,11 +21,11 @@ class Database:
         return self.db[name]
 
     def get_collection_properties(
-        self, *, collection_name: str, sample_size: int = 100
+        self, *, collection: str, sample_size: int = 100
     ) -> list[str]:
-        collection = self.get_collection(collection_name)
+        db_collection = self.get_collection(collection)
         properties: set[str] = set()
-        cursor = collection.find().limit(sample_size)
+        cursor = db_collection.find().limit(sample_size)
         for document in cursor:
             properties.update(_flatten_document_keys(document=document))
         return sorted(properties)
@@ -33,7 +33,7 @@ class Database:
     def create_vector_search_index(
         self,
         *,
-        collection_name: str,
+        collection: str,
         collection_embeddings_field: str,
         similarity: Similarity,
     ) -> None:
@@ -53,11 +53,11 @@ class Database:
                 ]
             },
         )
-        collection = database.get_collection(collection_name)
+        db_collection = database.get_collection(collection)
         logger.info(
-            f"Creating search index for {collection_name} on field {collection_embeddings_field} with similarity {mongo_similarity}"
+            f"Creating search index for {collection} on field {collection_embeddings_field} with similarity {mongo_similarity}"
         )
-        collection.create_search_index(model=search_index_model)
+        db_collection.create_search_index(model=search_index_model)
         logger.info("Search index created")
 
 

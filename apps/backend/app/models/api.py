@@ -25,16 +25,21 @@ class IngestJsonDatasetParams(BaseModel):
     limit: int | None = Field(default=None, ge=1)
 
 
-class CreateJsonEmbeddingParams(BaseModel):
+class CreateEmbeddingChunksParams(BaseModel):
     source_collection: str = Field(min_length=1)
     target_collection: str = Field(min_length=1)
-    chunk_mappings: str | None = Field(default=None, min_length=1)
+    chunk_mappings: str = Field(min_length=1)
     limit: int | None = Field(default=None, ge=1)
-    normalize: bool = True
+
+
+class GenerateEmbeddingsParams(BaseModel):
+    collection: str = Field(min_length=1)
+    limit: int | None = Field(default=None, ge=1)
+    normalize_embeddings: bool = True
 
 
 class CreateSearchIndexParams(BaseModel):
-    collection_name: str = Field(min_length=1)
+    collection: str = Field(min_length=1)
     collection_embeddings_field: str = Field(min_length=1)
     similarity: Similarity = "dot_product"
 

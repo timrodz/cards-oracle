@@ -16,7 +16,6 @@ An application that lets users retrieve data about Magic: The Gathering cards
 - One LLM provider:
   - Ollama (`ollama`) for local inference
   - Z.ai (`zai`) for hosted inference
-  - llama.cpp (`llama_cpp`) for local GGUF inference
 - Huggingface for transformers (via `uvx hf`)
 
 #### Transformer LLMs
@@ -42,7 +41,7 @@ uvx hf download <model> --local-dir models/<model>
 
 The backend requires `LLM_PROVIDER` to be explicitly set. See `docs/llms` on the root directory for more information on setups.
 
-`LLM_MODEL_NAME` is the model identifier. `LLM_MODEL_PATH` is the local `.gguf` file path and is required for `llama_cpp`.
+`LLM_MODEL_NAME` is the model identifier.
 
 ### Installation
 

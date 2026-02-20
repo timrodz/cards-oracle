@@ -1,9 +1,11 @@
 import pytest
+from bson import ObjectId
 
 from app.core.chunk_mappings import (
     extract_chunk_mapping_fields,
     render_chunk_mapping,
 )
+from app.models.db import MongoCollectionRecord
 
 
 def test_extract_chunk_mapping_fields_returns_expected_fields() -> None:
@@ -21,7 +23,9 @@ def test_extract_chunk_mapping_fields_raises_on_invalid_placeholder() -> None:
 def test_render_chunk_mapping_does_not_escape_field_values() -> None:
     rendered = render_chunk_mapping(
         chunk_mappings="{name} / {type}",
-        source_record={"name": "O'Malley", "type": "artifact\\creature"},
+        source_record=MongoCollectionRecord.model_validate(
+            {"_id": ObjectId(), "name": "O'Malley", "type": "artifact\\creature"}
+        ),
     )
     assert rendered == "O'Malley / artifact\\creature"
 
@@ -29,6 +33,8 @@ def test_render_chunk_mapping_does_not_escape_field_values() -> None:
 def test_render_chunk_mapping_escapes_template_literal_segments() -> None:
     rendered = render_chunk_mapping(
         chunk_mappings="prefix ' {name}",
-        source_record={"name": "value"},
+        source_record=MongoCollectionRecord.model_validate(
+            {"_id": ObjectId(), "name": "value"}
+        ),
     )
     assert rendered == "prefix '' value"

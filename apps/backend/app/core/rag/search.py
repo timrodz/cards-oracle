@@ -1,5 +1,5 @@
 import json
-from typing import Any, Iterator, List
+from typing import Any, Iterator
 
 from loguru import logger
 
@@ -29,8 +29,8 @@ from app.models.embedding import CardEmbeddingVectorSearchResult
 class RagSearch:
     def __vector_search(
         self,
-        query_vector: List[float],
-    ) -> List[SearchResult]:
+        query_vector: list[float],
+    ) -> list[SearchResult]:
         vector_limit = transformer_settings.vector_limit
 
         pipeline = [
@@ -53,7 +53,7 @@ class RagSearch:
             },
         ]
         raw_results = list(database.embeddings_collection.aggregate(pipeline))
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
         for raw_result in raw_results:
             embedding_record = CardEmbeddingVectorSearchResult.model_validate(
                 raw_result
@@ -69,9 +69,9 @@ class RagSearch:
         return results
 
     def __build_context(
-        self, *, results: List[SearchResult], max_chars: int, include_source_ids: bool
+        self, *, results: list[SearchResult], max_chars: int, include_source_ids: bool
     ) -> str:
-        sections: List[str] = []
+        sections: list[str] = []
         total = 0
         for result in results:
             header = ""
@@ -207,7 +207,7 @@ class RagSearch:
             exclude_none=True
         )
 
-        streamed_parts: List[str] = []
+        streamed_parts: list[str] = []
         for chunk in provider.stream(prompt):
             streamed_parts.append(chunk)
             yield StreamChunkEvent(type="chunk", content=chunk).model_dump(

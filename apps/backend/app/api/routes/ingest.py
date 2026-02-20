@@ -4,10 +4,15 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.params import Query
 from loguru import logger
 
-from app.data_pipeline.dataset_ingest_json import DatasetIngestJSON
+from app.data_pipeline.ingestion.json_records import (
+    run_pipeline_insert_json_dataset,
+)
 from app.models.api import IngestJsonDatasetParams, OperationMessageResponse
 
-router = APIRouter(prefix="/ingest", tags=["Data pipeline"])
+router = APIRouter(
+    prefix="/data-pipeline/ingestion",
+    tags=["Data pipeline", "Ingestion"],
+)
 
 
 def _ingest_json_dataset_params(
@@ -17,8 +22,8 @@ def _ingest_json_dataset_params(
     return IngestJsonDatasetParams(collection=collection, limit=limit)
 
 
-@router.post("/json-dataset", response_model=OperationMessageResponse)
-async def ingest_json_dataset(
+@router.post("/json-records", response_model=OperationMessageResponse)
+async def ingest_json_records(
     params: Annotated[IngestJsonDatasetParams, Depends(_ingest_json_dataset_params)],
     file: Annotated[UploadFile, File()],
 ) -> OperationMessageResponse:
@@ -34,13 +39,12 @@ async def ingest_json_dataset(
         raise HTTPException(status_code=400, detail="Only JSON files are supported.")
 
     try:
-        ingestion = DatasetIngestJSON()
         # file.file is a SpooledTemporaryFile which is file-like
         # We need to ensure we're at the beginning of the file, though usually we are
         file.file.seek(0)
 
-        ingestion.run_pipeline(
-            file_obj=file.file, collection_name=params.collection, limit=params.limit
+        run_pipeline_insert_json_dataset(
+            file_obj=file.file, collection=params.collection, limit=params.limit
         )
         return OperationMessageResponse(
             message="Dataset ingestion completed successfully."

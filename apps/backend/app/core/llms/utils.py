@@ -4,7 +4,6 @@ from typing import Optional
 from pydantic import ValidationError
 
 from app.core.config import llm_settings
-from app.core.llms.llama_cpp import LlamaCppProvider
 from app.core.llms.ollama import OllamaProvider
 from app.core.llms.provider import LLMProvider
 from app.core.llms.zai import ZaiProvider
@@ -67,13 +66,5 @@ def get_llm_provider() -> LLMProvider:
             llm_settings.llm_api_key,
             model=llm_settings.model_name,
             timeout=llm_settings.timeout_seconds,
-        )
-    if provider == "llama_cpp":
-        return LlamaCppProvider(
-            model=llm_settings.model_name,
-            model_path=llm_settings.model_path,
-            timeout=llm_settings.timeout_seconds,
-            endpoint=llm_settings.endpoint,
-            context_window_tokens=llm_settings.context_window_tokens,
         )
     raise ValueError(f"Unsupported LLM_PROVIDER: {llm_settings.provider}")

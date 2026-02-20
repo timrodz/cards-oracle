@@ -1,6 +1,5 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import List
 
 import torch as torch_module
 from loguru import logger
@@ -34,11 +33,14 @@ def load_transformer() -> SentenceTransformer:
 
 
 def embed_text(
+    text: str,
     *,
     model: SentenceTransformer,
-    text: str,
     normalize: bool,
-) -> List[float]:
+) -> list[float]:
+    """
+    Bottleneck - TODO: Improve
+    """
     embeddings = model.encode(
         text,
         show_progress_bar=False,

@@ -72,3 +72,9 @@ If you just want to run the app, here's the easiest setup:
 > docker-compose up -d --build
 > docker-compose exec mongodb mongosh --eval "db.adminCommand('ping')"
 ```
+
+## Test chunk mappings
+
+```
+name: {name}. Summary: {oracle_text}. Type: {type_line}. 
+```
