@@ -6,7 +6,7 @@ from typing import Iterator, Optional
 from loguru import logger
 from pymongo import ReplaceOne
 
-from app.core.config import db_settings
+from app.core.config import db_settings, transformer_settings
 from app.core.db import database
 from app.core.embeddings.utils import get_embedding_provider
 from app.models.db import (
@@ -106,6 +106,19 @@ def run_pipeline_generate_embeddings_from_chunks(
         "Starting embeddings pipeline: Generate embeddings from chunks"
         f"target collection={target_collection}, limit={limit}, normalize embeddings={normalize_embeddings}"
     )
+
+    if transformer_settings.provider != "sentence_transformers":
+        logger.info(
+            "Using sequential embeddings generation for provider "
+            f"{transformer_settings.provider} to reduce remote rate limit risk"
+        )
+        for batch in __load_db_records(target_collection, limit=limit):
+            process_batch(
+                batch,
+                target_collection=target_collection,
+                normalize_embeddings=normalize_embeddings,
+            )
+        return
 
     batches = list(__load_db_records(target_collection, limit=limit))
     with multiprocessing.Pool(processes=os.cpu_count()) as pool:
