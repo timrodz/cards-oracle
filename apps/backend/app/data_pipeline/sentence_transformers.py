@@ -13,8 +13,12 @@ def load_transformer() -> SentenceTransformer:
     device = "cpu"
     if torch_module.cuda.is_available():
         device = "cuda"
-    model_name = transformer_settings.transformer_model_name
-    model_path = transformer_settings.transformer_model_path
+    model_name = transformer_settings.model_name
+    model_path = transformer_settings.model_path
+    if model_path is None:
+        logger.info(f"Loading embedding model: {model_name} (device={device})")
+        return SentenceTransformer(model_name, device=device)
+
     resolved_path = Path(model_path)
     if resolved_path.exists():
         logger.info(

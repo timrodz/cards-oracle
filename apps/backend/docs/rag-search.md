@@ -53,7 +53,7 @@ Key environment variables:
 - `MONGODB_CARD_EMBEDDINGS_COLLECTION`
 - `EMBEDDING_PROVIDER` (`sentence_transformers` | `openai`)
 - `EMBEDDING_MODEL_NAME`
-- `EMBEDDING_MODEL_PATH` (ignored by OpenAI)
+- `EMBEDDING_MODEL_PATH` (optional for local sentence_transformers, ignored by OpenAI)
 - `EMBEDDING_MODEL_DIMENSIONS`
 - `EMBEDDING_VECTOR_SEARCH_LIMIT`
 - `LLM_PROVIDER` (`ollama` | `zai`)
@@ -61,12 +61,6 @@ Key environment variables:
 - `LLM_TIMEOUT_SECONDS`
 - `LLM_ENDPOINT` (optional)
 - `LLM_API_KEY`
-
-Legacy aliases still accepted:
-
-- `EMBEDDING_TRANSFORMER_MODEL_NAME`
-- `EMBEDDING_TRANSFORMER_MODEL_PATH`
-- `EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS`
 
 ## OpenAI Credential Note
 

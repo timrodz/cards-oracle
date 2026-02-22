@@ -13,7 +13,7 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
         self,
         *,
         model_name: str,
-        model_path: Path,
+        model_path: Path | None,
         model_dimensions: int,
     ) -> None:
         self._model_dimensions = model_dimensions
@@ -21,10 +21,16 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
 
     @staticmethod
     @lru_cache(maxsize=8)
-    def _load_transformer(*, model_name: str, model_path: Path) -> SentenceTransformer:
+    def _load_transformer(
+        *, model_name: str, model_path: Path | None
+    ) -> SentenceTransformer:
         device = "cpu"
         if torch_module.cuda.is_available():
             device = "cuda"
+
+        if model_path is None:
+            logger.info(f"Loading embedding model: {model_name} (device={device})")
+            return SentenceTransformer(model_name, device=device)
 
         resolved_path = Path(model_path)
         if resolved_path.exists():

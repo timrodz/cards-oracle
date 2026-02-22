@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, AliasChoices, BaseModel, Field, MongoDsn
+from pydantic import AfterValidator, BaseModel, MongoDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,8 +16,15 @@ def _expand_user_path(value: Path) -> Path:
     return value.expanduser()
 
 
+def _expand_optional_user_path(value: Path | None) -> Path | None:
+    if value is None:
+        return None
+    return value.expanduser()
+
+
 JsonFilePath = Annotated[Path, AfterValidator(_validate_json_file_type)]
 NormalizedPath = Annotated[Path, AfterValidator(_expand_user_path)]
+OptionalNormalizedPath = Annotated[Path | None, AfterValidator(_expand_optional_user_path)]
 LlmProviderName = Literal["ollama", "zai", "llama_cpp"]
 EmbeddingProviderName = Literal["sentence_transformers", "openai"]
 
@@ -37,21 +44,9 @@ class DatabaseSettings(BaseModel):
 class EmbeddingSettings(BaseModel):
     provider: EmbeddingProviderName
     model_name: str
-    model_path: NormalizedPath
+    model_path: OptionalNormalizedPath
     model_dimensions: int
     vector_limit: int
-
-    @property
-    def transformer_model_name(self) -> str:
-        return self.model_name
-
-    @property
-    def transformer_model_path(self) -> NormalizedPath:
-        return self.model_path
-
-    @property
-    def transformer_dimensions(self) -> int:
-        return self.model_dimensions
 
 
 class LlmSettings(BaseModel):
@@ -89,30 +84,12 @@ class Settings(BaseSettings):
     mongodb_batch_size: int = 500
 
     embedding_provider: EmbeddingProviderName = "sentence_transformers"
-    embedding_model_name: str = Field(
-        default="mixedbread-ai/mxbai-embed-xsmall-v1",
-        validation_alias=AliasChoices(
-            "EMBEDDING_MODEL_NAME", "EMBEDDING_TRANSFORMER_MODEL_NAME"
-        ),
+    embedding_model_name: str = "mixedbread-ai/mxbai-embed-xsmall-v1"
+    embedding_model_path: OptionalNormalizedPath = Path(
+        "models/mixedbread-ai/mxbai-embed-xsmall-v1"
     )
-    embedding_model_path: NormalizedPath = Field(
-        default=Path("models/mixedbread-ai/mxbai-embed-xsmall-v1"),
-        validation_alias=AliasChoices(
-            "EMBEDDING_MODEL_PATH", "EMBEDDING_TRANSFORMER_MODEL_PATH"
-        ),
-    )
-    embedding_model_dimensions: int = Field(
-        default=384,
-        validation_alias=AliasChoices(
-            "EMBEDDING_MODEL_DIMENSIONS", "EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS"
-        ),
-    )
-    embedding_vector_search_limit: int = Field(
-        default=5,
-        validation_alias=AliasChoices(
-            "EMBEDDING_VECTOR_SEARCH_LIMIT", "EMBEDDING_TRANSFORMER_VECTOR_SEARCH_LIMIT"
-        ),
-    )
+    embedding_model_dimensions: int = 384
+    embedding_vector_search_limit: int = 5
 
     llm_rag_max_context_chars: int = 4000
     llm_provider: LlmProviderName
@@ -164,7 +141,7 @@ class Settings(BaseSettings):
         )
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def _get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
 

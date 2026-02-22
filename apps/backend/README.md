@@ -32,15 +32,9 @@ Provider selection:
 Model settings:
 
 - `EMBEDDING_MODEL_NAME`
-- `EMBEDDING_MODEL_PATH` (ignored by OpenAI provider)
+- `EMBEDDING_MODEL_PATH` (optional for local sentence_transformers, ignored by OpenAI)
 - `EMBEDDING_MODEL_DIMENSIONS`
 - `EMBEDDING_VECTOR_SEARCH_LIMIT`
-
-Backward-compatible env aliases still supported:
-
-- `EMBEDDING_TRANSFORMER_MODEL_NAME`
-- `EMBEDDING_TRANSFORMER_MODEL_PATH`
-- `EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS`
 
 For local Sentence Transformers models:
 

@@ -107,12 +107,11 @@ def test_settings_default_embedding_provider_is_sentence_transformers() -> None:
     assert settings.embedding_provider == "sentence_transformers"
 
 
-def test_settings_support_legacy_embedding_transformer_env_alias(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("EMBEDDING_TRANSFORMER_MODEL_NAME", "legacy-transformer")
-    monkeypatch.setenv("EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS", "512")
-    settings = Settings(_env_file=None, llm_provider="ollama")
+def test_settings_allow_null_embedding_model_path() -> None:
+    settings = Settings(
+        _env_file=None,
+        llm_provider="ollama",
+        embedding_model_path=None,
+    )
 
-    assert settings.embedding_model_name == "legacy-transformer"
-    assert settings.embedding_model_dimensions == 512
+    assert settings.embedding_model_path is None
