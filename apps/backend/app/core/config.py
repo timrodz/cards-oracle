@@ -24,7 +24,9 @@ def _expand_optional_user_path(value: Path | None) -> Path | None:
 
 JsonFilePath = Annotated[Path, AfterValidator(_validate_json_file_type)]
 NormalizedPath = Annotated[Path, AfterValidator(_expand_user_path)]
-OptionalNormalizedPath = Annotated[Path | None, AfterValidator(_expand_optional_user_path)]
+OptionalNormalizedPath = Annotated[
+    Path | None, AfterValidator(_expand_optional_user_path)
+]
 LlmProviderName = Literal["ollama", "zai", "llama_cpp"]
 EmbeddingProviderName = Literal["sentence_transformers", "openai"]
 
@@ -111,7 +113,7 @@ class Settings(BaseSettings):
         )
 
     @property
-    def transformer_settings(self) -> EmbeddingSettings:
+    def embedding_settings(self) -> EmbeddingSettings:
         return EmbeddingSettings(
             provider=self.embedding_provider,
             model_name=self.embedding_model_name,
@@ -149,5 +151,5 @@ def _get_settings() -> Settings:
 _settings = _get_settings()
 app_settings = _settings.app_settings
 db_settings = _settings.database_settings
-transformer_settings = _settings.transformer_settings
+embedding_settings = _settings.embedding_settings
 llm_settings = _settings.llm_settings

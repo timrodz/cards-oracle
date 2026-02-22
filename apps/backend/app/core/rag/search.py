@@ -3,7 +3,7 @@ from typing import Any, Iterator
 
 from loguru import logger
 
-from app.core.config import llm_settings, transformer_settings
+from app.core.config import llm_settings, embedding_settings
 from app.core.db import database
 from app.core.embeddings.utils import get_embedding_provider
 from app.core.llms.utils import (
@@ -28,7 +28,7 @@ class RagSearch:
         self,
         query_vector: list[float],
     ) -> list[SearchResult]:
-        vector_limit = transformer_settings.vector_limit
+        vector_limit = embedding_settings.vector_limit
 
         pipeline = [
             {

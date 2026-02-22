@@ -2,7 +2,7 @@ from loguru import logger
 from pymongo import MongoClient
 from pymongo.operations import SearchIndexModel
 
-from app.core.config import db_settings, transformer_settings
+from app.core.config import db_settings, embedding_settings
 from app.models.embedding import Similarity, similarity_to_mongo
 
 
@@ -37,7 +37,7 @@ class Database:
         collection_embeddings_field: str,
         similarity: Similarity,
     ) -> None:
-        num_dimensions = transformer_settings.model_dimensions
+        num_dimensions = embedding_settings.model_dimensions
         mongo_similarity = similarity_to_mongo(similarity)
         search_index_model = SearchIndexModel(
             name="vector_index",
