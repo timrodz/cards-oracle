@@ -37,7 +37,7 @@ class Database:
         collection_embeddings_field: str,
         similarity: Similarity,
     ) -> None:
-        num_dimensions = transformer_settings.transformer_dimensions
+        num_dimensions = transformer_settings.model_dimensions
         mongo_similarity = similarity_to_mongo(similarity)
         search_index_model = SearchIndexModel(
             name="vector_index",

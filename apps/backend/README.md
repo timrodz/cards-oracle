@@ -1,6 +1,6 @@
 # Card Oracle backend
 
-An application that lets users retrieve data about Magic: The Gathering cards
+An application that lets users retrieve data about Magic: The Gathering cards.
 
 ![image](docs/architecture/high-level-architecture.png)
 
@@ -13,33 +13,53 @@ An application that lets users retrieve data about Magic: The Gathering cards
 - Python `3.12`
 - MongoDB `8.2+` (Vector Search)
 - Mongo Atlas CLI `1.52`
-- One LLM provider:
+- LLM provider (`LLM_PROVIDER`):
   - Ollama (`ollama`) for local inference
   - Z.ai (`zai`) for hosted inference
-- Huggingface for transformers (via `uvx hf`)
+- Embedding provider (`EMBEDDING_PROVIDER`):
+  - Sentence Transformers (`sentence_transformers`) for local embeddings
+  - OpenAI (`openai`) for hosted embeddings
 
-#### Transformer LLMs
+### Embeddings
 
-I'm using the [SentenceTransformers](https://sbert.net/) package.
+Embedding generation is provider-agnostic in code paths (data pipeline + query-time RAG).
 
-Constraints:
+Provider selection:
 
-- Transformer dimensions: `384`
-- Reasoning: The most relevant piece of information (oracle_text) is not long enough to require bigger dimensions
+- `EMBEDDING_PROVIDER="sentence_transformers"` (default)
+- `EMBEDDING_PROVIDER="openai"`
 
-Models:
+Model settings:
 
-- `mixedbread-ai/mxbai-embed-xsmall-v1`. Results have been OK.
-- `sentence-transformers/all-MiniLM-L6-v2`. Results have been better thn mxbai, faster on my M1 Pro.
+- `EMBEDDING_MODEL_NAME`
+- `EMBEDDING_MODEL_PATH` (ignored by OpenAI provider)
+- `EMBEDDING_MODEL_DIMENSIONS`
+- `EMBEDDING_VECTOR_SEARCH_LIMIT`
+
+Backward-compatible env aliases still supported:
+
+- `EMBEDDING_TRANSFORMER_MODEL_NAME`
+- `EMBEDDING_TRANSFORMER_MODEL_PATH`
+- `EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS`
+
+For local Sentence Transformers models:
 
 ```bash
 uvx hf auth login
 uvx hf download <model> --local-dir models/<model>
 ```
 
-#### RAG LLMs
+For OpenAI embeddings:
 
-The backend requires `LLM_PROVIDER` to be explicitly set. See `docs/llms` on the root directory for more information on setups.
+- Uses `LLM_API_KEY` for authentication.
+- Uses optional `LLM_ENDPOINT` as OpenAI `base_url`.
+- Sends configured dimensions directly with the OpenAI embeddings request.
+
+Current limitation: because OpenAI embeddings reuse `LLM_API_KEY`, running `LLM_PROVIDER=zai` with `EMBEDDING_PROVIDER=openai` requires a single shared key value and does not support separate remote provider keys.
+
+### RAG LLMs
+
+The backend requires `LLM_PROVIDER` to be explicitly set. See root docs in `docs/llms` for provider setup.
 
 `LLM_MODEL_NAME` is the model identifier.
 
@@ -54,14 +74,14 @@ source .venv/bin/activate
 uv sync
 ```
 
-**Note:** This backend connects to MongoDB. There's a bunch of things to setup, and it's easy to screw the setup... Please use `docker compose` instead!
+**Note:** This backend connects to MongoDB. Prefer running via `docker compose`.
 
 ### Development
 
 Run the FastAPI server:
 
 ```bash
-> fastapi dev app/main.py
+fastapi dev app/main.py
 ```
 
-Navigate to `localhost:8000/docs` and use the endpoints there :)
+Navigate to `http://localhost:8000/docs` and use the endpoints there.

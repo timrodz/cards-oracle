@@ -5,14 +5,11 @@ from loguru import logger
 
 from app.core.config import llm_settings, transformer_settings
 from app.core.db import database
+from app.core.embeddings.utils import get_embedding_provider
 from app.core.llms.utils import (
     get_llm_provider,
     parse_llm_response,
     parse_source_id_response,
-)
-from app.data_pipeline.sentence_transformers import (
-    embed_text,
-    load_transformer,
 )
 from app.models.api import (
     SearchResponse,
@@ -132,10 +129,9 @@ class RagSearch:
     def search(
         self, question: str, *, normalize_embeddings: bool = True
     ) -> SearchResponse | None:
-        embedder = load_transformer()
-        query_embeddings = embed_text(
-            model=embedder,
-            text=question,
+        embedder = get_embedding_provider()
+        query_embeddings = embedder.embed_text(
+            question,
             normalize=normalize_embeddings,
         )
         results = self.__vector_search(
@@ -170,11 +166,10 @@ class RagSearch:
     def search_stream(
         self, question: str, *, normalize_embeddings: bool
     ) -> Iterator[dict[str, Any]]:
-        embedder = load_transformer()
-        query_embeddings = embed_text(
-            model=embedder,
-            text=question,
-            normalize=True,
+        embedder = get_embedding_provider()
+        query_embeddings = embedder.embed_text(
+            question,
+            normalize=normalize_embeddings,
         )
 
         results = self.__vector_search(

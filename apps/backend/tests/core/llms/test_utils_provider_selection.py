@@ -81,10 +81,10 @@ def test_settings_expanduser_for_embedding_model_path(
     settings = Settings(
         _env_file=None,
         llm_provider="ollama",
-        embedding_transformer_model_path="~/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model_path="~/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2",
     )
 
-    assert settings.embedding_transformer_model_path == Path(
+    assert settings.embedding_model_path == Path(
         "/tmp/test-home/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2"
     )
 
@@ -93,9 +93,26 @@ def test_settings_allow_relative_embedding_model_path() -> None:
     settings = Settings(
         _env_file=None,
         llm_provider="ollama",
-        embedding_transformer_model_path="models/sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model_path="models/sentence-transformers/all-MiniLM-L6-v2",
     )
 
-    assert settings.embedding_transformer_model_path == Path(
+    assert settings.embedding_model_path == Path(
         "models/sentence-transformers/all-MiniLM-L6-v2"
     )
+
+
+def test_settings_default_embedding_provider_is_sentence_transformers() -> None:
+    settings = Settings(_env_file=None, llm_provider="ollama")
+
+    assert settings.embedding_provider == "sentence_transformers"
+
+
+def test_settings_support_legacy_embedding_transformer_env_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EMBEDDING_TRANSFORMER_MODEL_NAME", "legacy-transformer")
+    monkeypatch.setenv("EMBEDDING_TRANSFORMER_MODEL_DIMENSIONS", "512")
+    settings = Settings(_env_file=None, llm_provider="ollama")
+
+    assert settings.embedding_model_name == "legacy-transformer"
+    assert settings.embedding_model_dimensions == 512
