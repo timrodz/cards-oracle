@@ -100,8 +100,11 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
                     encoding_format="float",
                 )
                 break
-            except Exception as exc:  # pragma: no cover - runtime dependency behavior
-                if not self._is_retryable_error(error=exc) or attempt == self._max_retries:
+            except Exception as exc:
+                if (
+                    not self._is_retryable_error(error=exc)
+                    or attempt == self._max_retries
+                ):
                     raise RuntimeError(f"openai embeddings failed: {exc}") from exc
 
                 backoff_seconds = self._compute_backoff_seconds(attempt=attempt)

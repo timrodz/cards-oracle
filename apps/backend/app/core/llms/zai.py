@@ -24,7 +24,7 @@ class ZaiProvider(LLMProvider):
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
             )
-        except Exception as exc:  # pragma: no cover - runtime dependency behavior
+        except Exception as exc:
             raise RuntimeError(f"zai generate failed: {exc}") from exc
 
         if not response.choices:
@@ -38,7 +38,7 @@ class ZaiProvider(LLMProvider):
                 messages=[{"role": "user", "content": prompt}],
                 stream=True,
             )
-        except Exception as exc:  # pragma: no cover - runtime dependency behavior
+        except Exception as exc:
             raise RuntimeError(f"zai chat stream failed: {exc}") from exc
 
         try:
@@ -48,5 +48,5 @@ class ZaiProvider(LLMProvider):
                 content = chunk.choices[0].delta.content
                 if content:
                     yield content
-        except Exception as exc:  # pragma: no cover - runtime dependency behavior
+        except Exception as exc:
             raise RuntimeError(f"zai chat stream failed: {exc}") from exc
