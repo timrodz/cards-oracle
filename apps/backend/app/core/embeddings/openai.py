@@ -61,7 +61,8 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         except Exception as exc:  # pragma: no cover - runtime dependency behavior
             raise RuntimeError(f"openai embeddings failed: {exc}") from exc
 
-        vectors = [list(item.embedding) for item in response.data]
+        sorted_data = sorted(response.data, key=lambda x: x.index)
+        vectors = [list(item.embedding) for item in sorted_data]
         self._validate_dimensions(vectors)
 
         if normalize:
