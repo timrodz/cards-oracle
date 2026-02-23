@@ -69,9 +69,8 @@ def test_get_llm_provider_unsupported_provider_raises(
 
 def test_settings_requires_llm_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
-
     with pytest.raises(ValidationError, match="llm_provider"):
-        Settings(_env_file=None)
+        Settings(_env_file="")  # type: ignore
 
 
 def test_settings_expanduser_for_embedding_model_path(
@@ -79,9 +78,11 @@ def test_settings_expanduser_for_embedding_model_path(
 ) -> None:
     monkeypatch.setenv("HOME", "/tmp/test-home")
     settings = Settings(
-        _env_file=None,
+        _env_file="",  # type: ignore
         llm_provider="ollama",
-        embedding_model_path="~/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model_path=Path(
+            "~/src/ai/embedding/sentence-transformers/all-MiniLM-L6-v2"
+        ),
     )
 
     assert settings.embedding_model_path == Path(
@@ -91,9 +92,9 @@ def test_settings_expanduser_for_embedding_model_path(
 
 def test_settings_allow_relative_embedding_model_path() -> None:
     settings = Settings(
-        _env_file=None,
+        _env_file="",  # type: ignore
         llm_provider="ollama",
-        embedding_model_path="models/sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model_path=Path("models/sentence-transformers/all-MiniLM-L6-v2"),
     )
 
     assert settings.embedding_model_path == Path(
@@ -102,16 +103,16 @@ def test_settings_allow_relative_embedding_model_path() -> None:
 
 
 def test_settings_default_embedding_provider_is_sentence_transformers() -> None:
-    settings = Settings(_env_file=None, llm_provider="ollama")
+    settings = Settings(_env_file="", llm_provider="ollama")  # type: ignore
 
     assert settings.embedding_provider == "sentence_transformers"
 
 
 def test_settings_allow_null_embedding_model_path() -> None:
     settings = Settings(
-        _env_file=None,
+        _env_file="",  # type: ignore
         llm_provider="ollama",
-        embedding_model_path=None,
+        embedding_model_path=None,  # type: ignore
     )
 
     assert settings.embedding_model_path is None
