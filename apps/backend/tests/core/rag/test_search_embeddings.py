@@ -23,7 +23,9 @@ def test_search_uses_requested_embedding_normalization(monkeypatch) -> None:
     )
 
     rag_search = RagSearch(db=None)  # type: ignore
-    assert rag_search.search("hello", normalize_embeddings=False) is None
+    result = rag_search.search("hello", normalize_embeddings=False)
+    assert result is not None
+    assert result.answer == "No matching cards found. Try rephrasing your question."
     assert fake_embedder.last_normalize is False
 
 

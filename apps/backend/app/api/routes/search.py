@@ -62,7 +62,7 @@ async def search(
         params.question,
         normalize_embeddings=params.normalize_embeddings,
     )
-    return SearchResponse.model_validate(result)
+    return result
 
 
 @router.get("/stream")

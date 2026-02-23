@@ -133,7 +133,7 @@ class RagSearch:
 
     def search(
         self, question: str, *, normalize_embeddings: bool = True
-    ) -> SearchResponse | None:
+    ) -> SearchResponse:
         embedder = get_embedding_provider()
         query_embeddings = embedder.embed_text(
             question,
@@ -145,7 +145,10 @@ class RagSearch:
 
         if not results:
             logger.warning(f"Vector search produced 0 results for question {question}")
-            return None
+            return SearchResponse(
+                answer="No matching cards found. Try rephrasing your question.",
+                source_id=None,
+            )
 
         context = self.__build_context(
             results=results,
@@ -154,7 +157,10 @@ class RagSearch:
         )
         if not context:
             logger.warning("Unable to build context")
-            return None
+            return SearchResponse(
+                answer="No matching cards found. Try rephrasing your question.",
+                source_id=None,
+            )
 
         prompt = self.__build_prompt(
             question=question, context=context, require_json=True
