@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, HTTPException
 from loguru import logger
 
-from app.core.db import database
+from app.core.db import Database, get_db
 from app.models.api import (
     CreateSearchIndexParams,
     OperationMessageResponse,
@@ -26,9 +26,12 @@ def __create_search_index_params(
 
 
 @router.get("/collections/{collection}/properties", response_model=list[str])
-async def get_collection_properties(collection: str) -> list[str]:
+async def get_collection_properties(
+    collection: str,
+    db: Database = Depends(get_db),
+) -> list[str]:
     try:
-        return database.get_collection_properties(collection=collection)
+        return db.get_collection_properties(collection=collection)
     except Exception as e:
         logger.error(f"Collection property retrieval failed: {e}")
         raise HTTPException(
@@ -39,9 +42,10 @@ async def get_collection_properties(collection: str) -> list[str]:
 @router.post("/search-index", response_model=OperationMessageResponse)
 async def create_search_index_endpoint(
     params: Annotated[CreateSearchIndexParams, Depends(__create_search_index_params)],
+    db: Database = Depends(get_db),
 ) -> OperationMessageResponse:
     try:
-        database.create_vector_search_index(
+        db.create_vector_search_index(
             collection=params.collection,
             collection_embeddings_field=params.collection_embeddings_field,
             similarity=params.similarity,

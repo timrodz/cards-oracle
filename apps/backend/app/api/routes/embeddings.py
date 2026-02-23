@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Query
 from loguru import logger
 
 from app.core.chunk_mappings import extract_chunk_mapping_fields
-from app.core.db import database
+from app.core.db import Database, get_db
 from app.data_pipeline.embeddings.create_chunks import (
     run_pipeline_create_embedding_chunks,
 )
@@ -53,6 +53,7 @@ async def create_embedding_chunks(
     params: Annotated[
         CreateEmbeddingChunksParams, Depends(__create_embedding_chunks_params)
     ],
+    db: Database = Depends(get_db),
 ) -> OperationMessageResponse:
     logger.info(
         "Starting embedding chunks creation: "
@@ -62,7 +63,7 @@ async def create_embedding_chunks(
     try:
         # Validate mappings to verify requested fields exist in the DB
         collection_properties = set(
-            database.get_collection_properties(collection=params.source_collection)
+            db.get_collection_properties(collection=params.source_collection)
         )
         mapped_fields = extract_chunk_mapping_fields(
             chunk_mappings=params.chunk_mappings

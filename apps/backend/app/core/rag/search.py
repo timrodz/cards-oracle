@@ -1,18 +1,17 @@
 import json
 from typing import Any, Iterator
 
+from fastapi import Depends
+
 from loguru import logger
 
-from app.core.config import llm_settings, transformer_settings
-from app.core.db import database
+from app.core.config import llm_settings, embedding_settings
+from app.core.db import Database, get_db
+from app.core.embeddings.utils import get_embedding_provider
 from app.core.llms.utils import (
     get_llm_provider,
     parse_llm_response,
     parse_source_id_response,
-)
-from app.data_pipeline.sentence_transformers import (
-    embed_text,
-    load_transformer,
 )
 from app.models.api import (
     SearchResponse,
@@ -27,11 +26,14 @@ from app.models.embedding import CardEmbeddingVectorSearchResult
 
 
 class RagSearch:
+    def __init__(self, db: Database):
+        self.db = db
+
     def __vector_search(
         self,
         query_vector: list[float],
     ) -> list[SearchResult]:
-        vector_limit = transformer_settings.vector_limit
+        vector_limit = embedding_settings.vector_limit
 
         pipeline = [
             {
@@ -52,7 +54,7 @@ class RagSearch:
                 }
             },
         ]
-        raw_results = list(database.embeddings_collection.aggregate(pipeline))
+        raw_results = list(self.db.embeddings_collection.aggregate(pipeline))
         results: list[SearchResult] = []
         for raw_result in raw_results:
             embedding_record = CardEmbeddingVectorSearchResult.model_validate(
@@ -132,10 +134,9 @@ class RagSearch:
     def search(
         self, question: str, *, normalize_embeddings: bool = True
     ) -> SearchResponse | None:
-        embedder = load_transformer()
-        query_embeddings = embed_text(
-            model=embedder,
-            text=question,
+        embedder = get_embedding_provider()
+        query_embeddings = embedder.embed_text(
+            question,
             normalize=normalize_embeddings,
         )
         results = self.__vector_search(
@@ -170,11 +171,10 @@ class RagSearch:
     def search_stream(
         self, question: str, *, normalize_embeddings: bool
     ) -> Iterator[dict[str, Any]]:
-        embedder = load_transformer()
-        query_embeddings = embed_text(
-            model=embedder,
-            text=question,
-            normalize=True,
+        embedder = get_embedding_provider()
+        query_embeddings = embedder.embed_text(
+            question,
+            normalize=normalize_embeddings,
         )
 
         results = self.__vector_search(
@@ -236,3 +236,7 @@ class RagSearch:
                     exclude_none=True
                 )
         yield StreamDoneEvent(type="done").model_dump(exclude_none=True)
+
+
+def get_rag_search(db: Database = Depends(get_db)) -> RagSearch:
+    return RagSearch(db=db)

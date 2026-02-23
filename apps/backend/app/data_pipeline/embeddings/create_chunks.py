@@ -8,11 +8,20 @@ from pymongo import ReplaceOne
 
 from app.core.chunk_mappings import render_chunk_mapping
 from app.core.config import db_settings
-from app.core.db import database
+from app.core.db import Database
 from app.models.db import (
     EmptyEmbeddingRecord,
     MongoCollectionRecord,
 )
+
+_db_instance: Optional[Database] = None
+
+
+def _get_db() -> Database:
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = Database()
+    return _db_instance
 
 
 def __upsert_records(
@@ -22,7 +31,7 @@ def __upsert_records(
     if not records:
         return
 
-    db_collection = database.get_collection(collection)
+    db_collection = _get_db().get_collection(collection)
 
     operations = [
         ReplaceOne(
@@ -40,7 +49,7 @@ def __upsert_records(
 def __load_db_records(
     source_collection: str, *, limit: Optional[int] = None
 ) -> Iterator[list[MongoCollectionRecord]]:
-    db_collection = database.get_collection(source_collection)
+    db_collection = _get_db().get_collection(source_collection)
     logger.debug(
         f"Loading records from collection: {source_collection} with limit {limit}"
     )

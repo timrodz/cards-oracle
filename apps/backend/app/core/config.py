@@ -16,9 +16,19 @@ def _expand_user_path(value: Path) -> Path:
     return value.expanduser()
 
 
+def _expand_optional_user_path(value: Path | None) -> Path | None:
+    if value is None:
+        return None
+    return value.expanduser()
+
+
 JsonFilePath = Annotated[Path, AfterValidator(_validate_json_file_type)]
 NormalizedPath = Annotated[Path, AfterValidator(_expand_user_path)]
+OptionalNormalizedPath = Annotated[
+    Path | None, AfterValidator(_expand_optional_user_path)
+]
 LlmProviderName = Literal["ollama", "zai", "llama_cpp"]
+EmbeddingProviderName = Literal["sentence_transformers", "openai"]
 
 
 class DatasetFileInput(BaseModel):
@@ -34,9 +44,10 @@ class DatabaseSettings(BaseModel):
 
 
 class EmbeddingSettings(BaseModel):
-    transformer_model_name: str
-    transformer_model_path: NormalizedPath
-    transformer_dimensions: int
+    provider: EmbeddingProviderName
+    model_name: str
+    model_path: OptionalNormalizedPath
+    model_dimensions: int
     vector_limit: int
 
 
@@ -62,6 +73,7 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     app_cors_origins: str = "http://localhost:3000"
@@ -73,11 +85,12 @@ class Settings(BaseSettings):
     mongodb_card_embeddings_collection: str = "card_embeddings"
     mongodb_batch_size: int = 500
 
-    embedding_transformer_model_name: str = "mixedbread-ai/mxbai-embed-xsmall-v1"
-    embedding_transformer_model_path: NormalizedPath = Path(
+    embedding_provider: EmbeddingProviderName = "sentence_transformers"
+    embedding_model_name: str = "mixedbread-ai/mxbai-embed-xsmall-v1"
+    embedding_model_path: OptionalNormalizedPath = Path(
         "models/mixedbread-ai/mxbai-embed-xsmall-v1"
     )
-    embedding_transformer_model_dimensions: int = 384
+    embedding_model_dimensions: int = 384
     embedding_vector_search_limit: int = 5
 
     llm_rag_max_context_chars: int = 4000
@@ -100,11 +113,12 @@ class Settings(BaseSettings):
         )
 
     @property
-    def transformer_settings(self) -> EmbeddingSettings:
+    def embedding_settings(self) -> EmbeddingSettings:
         return EmbeddingSettings(
-            transformer_model_name=self.embedding_transformer_model_name,
-            transformer_model_path=self.embedding_transformer_model_path,
-            transformer_dimensions=self.embedding_transformer_model_dimensions,
+            provider=self.embedding_provider,
+            model_name=self.embedding_model_name,
+            model_path=self.embedding_model_path,
+            model_dimensions=self.embedding_model_dimensions,
             vector_limit=self.embedding_vector_search_limit,
         )
 
@@ -129,7 +143,7 @@ class Settings(BaseSettings):
         )
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def _get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
 
@@ -137,5 +151,5 @@ def _get_settings() -> Settings:
 _settings = _get_settings()
 app_settings = _settings.app_settings
 db_settings = _settings.database_settings
-transformer_settings = _settings.transformer_settings
+embedding_settings = _settings.embedding_settings
 llm_settings = _settings.llm_settings

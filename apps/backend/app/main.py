@@ -1,14 +1,29 @@
 import sys
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from pymongo import MongoClient
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.api.main import api_router
-from app.core.config import app_settings
+from app.core.config import app_settings, db_settings
 from app.models.api import HealthCheckResponse
 
-app = FastAPI(title="Card Oracle")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up application: connecting to MongoDB.")
+    uri = db_settings.uri.encoded_string()
+    mongo_client: MongoClient = MongoClient(uri)
+    app.state.mongo_client = mongo_client
+    yield
+    logger.info("Shutting down application: closing MongoDB connection.")
+    mongo_client.close()
+
+
+app = FastAPI(title="Card Oracle", lifespan=lifespan)
 
 # Configure the logger
 logger.add(

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 ScryfallCardLegality = Literal["legal", "not_legal", "restricted", "banned"]
 ScryfallCardColor = Literal["W", "R", "B", "U", "G"] | None
@@ -77,7 +77,7 @@ class ScryfallCardBase(BaseModel):
     oracle_text: str | None = None
     power: str | None = None
     toughness: str | None = None
-    colors: list[ScryfallCardColor] = []
+    colors: list[ScryfallCardColor] = Field(default_factory=list)
     color_identity: list[ScryfallCardColor]
     keywords: list[str]
     produced_mana: list[str] | None = None

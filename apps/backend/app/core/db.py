@@ -1,15 +1,18 @@
 from loguru import logger
 from pymongo import MongoClient
+from fastapi import Request
 from pymongo.operations import SearchIndexModel
 
-from app.core.config import db_settings, transformer_settings
+from app.core.config import db_settings, embedding_settings
 from app.models.embedding import Similarity, similarity_to_mongo
 
 
 class Database:
-    def __init__(self):
-        uri = db_settings.uri.encoded_string()
-        db_client = MongoClient(uri)
+    def __init__(self, db_client: MongoClient | None = None):
+        if db_client is None:
+            uri = db_settings.uri.encoded_string()
+            db_client = MongoClient(uri)
+
         db_name = db_settings.name
         db = db_client[db_name]
         self.db = db
@@ -37,7 +40,7 @@ class Database:
         collection_embeddings_field: str,
         similarity: Similarity,
     ) -> None:
-        num_dimensions = transformer_settings.transformer_dimensions
+        num_dimensions = embedding_settings.model_dimensions
         mongo_similarity = similarity_to_mongo(similarity)
         search_index_model = SearchIndexModel(
             name="vector_index",
@@ -53,7 +56,7 @@ class Database:
                 ]
             },
         )
-        db_collection = database.get_collection(collection)
+        db_collection = self.get_collection(collection)
         logger.info(
             f"Creating search index for {collection} on field {collection_embeddings_field} with similarity {mongo_similarity}"
         )
@@ -79,4 +82,8 @@ def _flatten_document_keys(*, document: dict, prefix: str = "") -> set[str]:
     return keys
 
 
-database = Database()
+def get_db(request: Request) -> Database:
+    # We assume 'mongo_client' is set in the lifespan in main.py
+    # and use it to instantiate a Database bound to that client
+    db_client: MongoClient = request.app.state.mongo_client
+    return Database(db_client=db_client)
