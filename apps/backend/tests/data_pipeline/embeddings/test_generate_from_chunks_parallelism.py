@@ -27,7 +27,7 @@ def test_run_pipeline_uses_sequential_for_openai(monkeypatch) -> None:
 
     monkeypatch.setattr(
         pipeline,
-        "transformer_settings",
+        "embedding_settings",
         SimpleNamespace(provider="openai"),
     )
     monkeypatch.setattr(
@@ -54,13 +54,15 @@ def test_run_pipeline_uses_sequential_for_openai(monkeypatch) -> None:
     assert calls == [(["a"], "target", False), (["b"], "target", False)]
 
 
-def test_run_pipeline_uses_multiprocessing_for_sentence_transformers(monkeypatch) -> None:
+def test_run_pipeline_uses_multiprocessing_for_sentence_transformers(
+    monkeypatch,
+) -> None:
     _DummyPool.used = False
     calls: list[tuple[list[str], str, bool]] = []
 
     monkeypatch.setattr(
         pipeline,
-        "transformer_settings",
+        "embedding_settings",
         SimpleNamespace(provider="sentence_transformers"),
     )
     monkeypatch.setattr(

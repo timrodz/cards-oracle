@@ -8,7 +8,7 @@ from pydantic import TypeAdapter, ValidationError
 from starlette.concurrency import iterate_in_threadpool
 from typing_extensions import Iterator
 
-from app.core.rag.search import RagSearch
+from app.core.rag.search import RagSearch, get_rag_search
 from app.models.api import (
     SearchQueryParams,
     SearchResponse,
@@ -19,8 +19,6 @@ from app.models.api import (
 router = APIRouter(prefix="/search", tags=["RAG"])
 
 stream_event_adapter: TypeAdapter[StreamEvent] = TypeAdapter(StreamEvent)
-
-rag_search = RagSearch()
 
 
 def _search_query_params(
@@ -45,7 +43,9 @@ def _encode_event_stream(event: dict[str, Any]) -> str:
     return f"data: {payload}\n\n"
 
 
-def _search_rag_stream(query: str, normalize_embeddings: bool) -> Iterator[str]:
+def _search_rag_stream(
+    rag_search: RagSearch, query: str, normalize_embeddings: bool
+) -> Iterator[str]:
     for event in rag_search.search_stream(
         query, normalize_embeddings=normalize_embeddings
     ):
@@ -55,6 +55,7 @@ def _search_rag_stream(query: str, normalize_embeddings: bool) -> Iterator[str]:
 @router.get("/", response_model=SearchResponse)
 async def search(
     params: Annotated[SearchQueryParams, Depends(_search_query_params)],
+    rag_search: RagSearch = Depends(get_rag_search),
 ) -> SearchResponse:
     result = await asyncio.to_thread(
         rag_search.search,
@@ -67,8 +68,10 @@ async def search(
 @router.get("/stream")
 async def stream_search(
     params: Annotated[SearchQueryParams, Depends(_search_query_params)],
+    rag_search: RagSearch = Depends(get_rag_search),
 ) -> StreamingResponse:
     stream = _search_rag_stream(
+        rag_search,
         params.question,
         normalize_embeddings=params.normalize_embeddings,
     )

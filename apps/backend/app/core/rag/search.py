@@ -1,10 +1,12 @@
 import json
 from typing import Any, Iterator
 
+from fastapi import Depends
+
 from loguru import logger
 
 from app.core.config import llm_settings, embedding_settings
-from app.core.db import database
+from app.core.db import Database, get_db
 from app.core.embeddings.utils import get_embedding_provider
 from app.core.llms.utils import (
     get_llm_provider,
@@ -24,6 +26,9 @@ from app.models.embedding import CardEmbeddingVectorSearchResult
 
 
 class RagSearch:
+    def __init__(self, db: Database):
+        self.db = db
+
     def __vector_search(
         self,
         query_vector: list[float],
@@ -49,7 +54,7 @@ class RagSearch:
                 }
             },
         ]
-        raw_results = list(database.embeddings_collection.aggregate(pipeline))
+        raw_results = list(self.db.embeddings_collection.aggregate(pipeline))
         results: list[SearchResult] = []
         for raw_result in raw_results:
             embedding_record = CardEmbeddingVectorSearchResult.model_validate(
@@ -231,3 +236,7 @@ class RagSearch:
                     exclude_none=True
                 )
         yield StreamDoneEvent(type="done").model_dump(exclude_none=True)
+
+
+def get_rag_search(db: Database = Depends(get_db)) -> RagSearch:
+    return RagSearch(db=db)

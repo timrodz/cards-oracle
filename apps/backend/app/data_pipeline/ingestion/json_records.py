@@ -5,9 +5,11 @@ from loguru import logger
 from pymongo import InsertOne
 
 from app.core.config import db_settings
-from app.core.db import database
+from app.core.db import Database
 
 json_type = Dict[str, Any]
+
+_db_instance: Optional[Database] = None
 
 
 def __load_json_file_as_list(file_obj: IO) -> list[json_type]:
@@ -31,6 +33,13 @@ def __parse_dataset(
             return
 
 
+def _get_db() -> Database:
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = Database()
+    return _db_instance
+
+
 def __upsert_records(*, records: list[json_type], collection: str) -> bool:
     """
     TODO:
@@ -40,7 +49,7 @@ def __upsert_records(*, records: list[json_type], collection: str) -> bool:
     if not operations:
         return False
 
-    db_collection = database.get_collection(collection)
+    db_collection = _get_db().get_collection(collection)
     db_collection.bulk_write(operations, ordered=False)
     logger.info(f"Upserted {len(records)} cards")
     return True

@@ -10,7 +10,6 @@ class _FakeEmbeddingProvider:
         return [0.1, 0.2]
 
 
-
 def test_search_uses_requested_embedding_normalization(monkeypatch) -> None:
     fake_embedder = _FakeEmbeddingProvider()
     monkeypatch.setattr(
@@ -23,7 +22,7 @@ def test_search_uses_requested_embedding_normalization(monkeypatch) -> None:
         lambda _self, query_vector: [],
     )
 
-    rag_search = RagSearch()
+    rag_search = RagSearch(db=None)  # type: ignore
     assert rag_search.search("hello", normalize_embeddings=False) is None
     assert fake_embedder.last_normalize is False
 
@@ -40,6 +39,6 @@ def test_search_stream_uses_requested_embedding_normalization(monkeypatch) -> No
         lambda _self, query_vector: [],
     )
 
-    rag_search = RagSearch()
+    rag_search = RagSearch(db=None)  # type: ignore
     _ = list(rag_search.search_stream("hello", normalize_embeddings=False))
     assert fake_embedder.last_normalize is False

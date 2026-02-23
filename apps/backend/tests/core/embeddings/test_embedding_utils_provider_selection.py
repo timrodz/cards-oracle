@@ -16,7 +16,7 @@ def test_get_embedding_provider_selects_sentence_transformers(
     expected = object()
     monkeypatch.setattr(
         utils,
-        "transformer_settings",
+        "embedding_settings",
         SimpleNamespace(
             provider="sentence_transformers",
             model_name="all-MiniLM-L6-v2",
@@ -39,7 +39,7 @@ def test_get_embedding_provider_selects_openai(
     expected = object()
     monkeypatch.setattr(
         utils,
-        "transformer_settings",
+        "embedding_settings",
         SimpleNamespace(
             provider="openai",
             model_name="text-embedding-3-small",
@@ -66,7 +66,7 @@ def test_get_embedding_provider_unsupported_provider_raises(
 ) -> None:
     monkeypatch.setattr(
         utils,
-        "transformer_settings",
+        "embedding_settings",
         SimpleNamespace(
             provider="unsupported",
             model_name="x",
