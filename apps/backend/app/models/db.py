@@ -13,20 +13,20 @@ class MongoCollectionRecord(BaseModel):
 class EmptyEmbeddingRecord(BaseModel):
     mongo_id: PydanticObjectId = Field(alias="_id")
     summary: str
-    embeddings: list[float] = []
+    embeddings: list[float] = Field(default_factory=list)
 
 
 class GeneratedEmbeddingRecord(BaseModel):
     mongo_id: PydanticObjectId = Field(alias="_id")
     summary: str
-    embeddings: list[float] = []
+    embeddings: list[float] = Field(default_factory=list)
 
 
 class CardEmbeddingRecord(BaseModel):
     mongo_id: PydanticObjectId = Field(alias="_id")
     source_id: str
     summary: str
-    embeddings: list[float] = []
+    embeddings: list[float] = Field(default_factory=list)
 
 
 class ScryfallCardRecord(ScryfallCardBase):
