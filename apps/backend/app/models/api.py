@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.embedding import Similarity
+from app.models.scryfall import ScryfallCard
 
 
 class HealthCheckResponse(BaseModel):
@@ -13,6 +14,23 @@ class HealthCheckResponse(BaseModel):
 
 class OperationMessageResponse(BaseModel):
     message: str
+
+
+class CardSearchParams(BaseModel):
+    query: str | None = Field(default=None)
+    cmc: float | None = Field(default=None, ge=0)
+    set: str | None = Field(default=None)
+    released_at_from: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    released_at_to: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=100)
+
+
+class CardSearchResponse(BaseModel):
+    items: list[ScryfallCard]
+    total: int
+    page: int
+    page_size: int
 
 
 class SearchQueryParams(BaseModel):
