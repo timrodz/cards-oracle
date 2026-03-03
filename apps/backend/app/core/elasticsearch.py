@@ -8,14 +8,11 @@ from app.core.config import elasticsearch_settings
 def get_elasticsearch_client() -> AsyncElasticsearch:
     """
     Creates and returns an AsyncElasticsearch client instance.
-    Includes headers for compatibility with v8 server when using v9 client.
     """
     url = elasticsearch_settings.url
     logger.info(f"Creating Elasticsearch client for {url}")
-    return AsyncElasticsearch(
-        url,
-        headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=8"},
-    )
+    return AsyncElasticsearch(url)
+
 
 
 async def get_es(request: Request) -> AsyncElasticsearch:
@@ -65,5 +62,5 @@ async def init_elasticsearch(es: AsyncElasticsearch):
             logger.info(f"Elasticsearch index already exists: {index_name}")
     except Exception as e:
         logger.error(f"Failed to initialize Elasticsearch: {e}")
-        # We don't want to crash the app if ES is not ready yet, 
+        # We don't want to crash the app if ES is not ready yet,
         # but in a production app we might want to retry or fail.
