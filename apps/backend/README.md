@@ -79,3 +79,14 @@ fastapi dev app/main.py
 ```
 
 Navigate to `http://localhost:8000/docs` and use the endpoints there.
+
+#### Key Endpoints
+
+- **Data Ingestion**: `POST /data-pipeline/ingestion/json-records`
+  - Upload a Scryfall JSON file to populate MongoDB.
+- **Search Indexing**: `POST /cards/search/index`
+  - Sync MongoDB data to Elasticsearch for fast, fuzzy search.
+- **Card Search**: `GET /cards/search`
+  - Query Elasticsearch with filters (CMC, Set, Date) and fuzzy name matching.
+- **RAG Search**: `POST /search`
+  - Natural language search using vector embeddings and LLMs.
