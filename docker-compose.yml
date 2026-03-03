@@ -10,6 +10,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -37,8 +39,31 @@ services:
       - mongo_atlas_config_data:/data/configdb
       - mongo_atlas_search_data:/data/mongot
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   mongo_atlas_data:
   mongo_atlas_config_data:
   mongo_atlas_search_data:
+  esdata:
