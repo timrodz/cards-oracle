@@ -8,10 +8,14 @@ from app.core.config import elasticsearch_settings
 def get_elasticsearch_client() -> AsyncElasticsearch:
     """
     Creates and returns an AsyncElasticsearch client instance.
+    Includes headers for compatibility with v8 server when using v9 client.
     """
     url = elasticsearch_settings.url
     logger.info(f"Creating Elasticsearch client for {url}")
-    return AsyncElasticsearch(url)
+    return AsyncElasticsearch(
+        url,
+        headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=8"},
+    )
 
 
 async def get_es(request: Request) -> AsyncElasticsearch:
