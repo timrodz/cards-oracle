@@ -20,6 +20,11 @@ class _DummyPool:
         for batch in batches:
             func(batch)
 
+    def imap_unordered(self, func, batches):
+        for batch in batches:
+            func(batch)
+        return []
+
 
 def test_run_pipeline_uses_sequential_for_openai(monkeypatch) -> None:
     _DummyPool.used = False

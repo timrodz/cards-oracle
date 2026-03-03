@@ -129,11 +129,14 @@ def run_pipeline_generate_embeddings_from_chunks(
             )
         return
 
-    batches = list(__load_db_records(target_collection, limit=limit))
     with multiprocessing.Pool(processes=os.cpu_count()) as pool:
         partial_worker = partial(
             process_batch,
             target_collection=target_collection,
             normalize_embeddings=normalize_embeddings,
         )
-        pool.map(partial_worker, batches)
+        list(
+            pool.imap_unordered(
+                partial_worker, __load_db_records(target_collection, limit=limit)
+            )
+        )
