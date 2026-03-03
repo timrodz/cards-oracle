@@ -1,9 +1,11 @@
 from typing import Annotated
 
+from elasticsearch import AsyncElasticsearch
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.params import Query
 from loguru import logger
 
+from app.core.elasticsearch import get_es
 from app.data_pipeline.ingestion.json_records import (
     run_pipeline_insert_json_dataset,
 )
@@ -26,6 +28,7 @@ def _ingest_json_dataset_params(
 async def ingest_json_records(
     params: Annotated[IngestJsonDatasetParams, Depends(_ingest_json_dataset_params)],
     file: Annotated[UploadFile, File()],
+    es: Annotated[AsyncElasticsearch, Depends(get_es)],
 ) -> OperationMessageResponse:
     logger.info(f"Ingesting JSON dataset into collection: {params.collection}")
 
@@ -43,8 +46,11 @@ async def ingest_json_records(
         # We need to ensure we're at the beginning of the file, though usually we are
         file.file.seek(0)
 
-        run_pipeline_insert_json_dataset(
-            file_obj=file.file, collection=params.collection, limit=params.limit
+        await run_pipeline_insert_json_dataset(
+            file_obj=file.file,
+            collection=params.collection,
+            limit=params.limit,
+            es=es,
         )
         return OperationMessageResponse(
             message="Dataset ingestion completed successfully."
