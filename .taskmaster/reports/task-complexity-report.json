@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-03-03T09:04:11.980Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Add Elasticsearch to Docker Compose and define dependencies",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Provide the exact docker-compose YAML snippet, detailing the volume configuration, healthcheck logic for green/yellow status, and environment variables.",
+			"reasoning": "Standard infrastructure task. The complexity is relatively low as it involves declarative configuration, but requires precise syntax for Elasticsearch environment limits, discovery type, and healthcheck commands."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Update configuration and install dependencies",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Detail the configuration additions in Pytest/Pydantic settings and the changes to the dependency manifest files.",
+			"reasoning": "Very low complexity. It's a straightforward integration of a new Pydantic BaseSettings class for Elasticsearch and updating the dependency manifest (e.g., requirements.txt or pyproject.toml)."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Elasticsearch client management and lifespan hooks",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: 1. Creating the Async Elasticsearch client factory/singleton. 2. Modifying the FastAPI lifespan context manager to properly open and cleanly close the connection.",
+			"reasoning": "Moderate complexity. Requires an understanding of FastAPI's modern lifespan context managers and proper async resource cleanup to avoid connection leaks during startup and shutdown."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Define Elasticsearch index mapping and initialization",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: 1. Formulating the ES mapping JSON/dictionary tailored for ScryfallCard data (text vs keyword types). 2. Writing the initialization script executed during startup to safely create the index.",
+			"reasoning": "Moderate to high complexity. Defining correct mappings is critical for search performance (differentiating between 'text' for fuzzy matching and 'keyword' for exact filtering). Migrations and index checking need to be idempotent."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Implement Card Indexing Service",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: 1. Pydantic-to-ES dictionary translation. 2. Implementing the async_bulk generator logic. 3. Adding granular error handling and Loguru logging for failed individual document upserts.",
+			"reasoning": "Moderate complexity. Using `async_bulk` correctly involves creating a generator for documents, matching IDs for idempotency, and implementing careful error handling so one bad document doesn't crash the whole batch."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Integrate Elasticsearch sync into the ingestion pipeline",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: 1. Identifying the MongoDB insertion point and calling the ES indexing service. 2. Implementing fallback/error handling to address dual-write failures (e.g., Mongo succeeds but ES fails).",
+			"reasoning": "Moderate complexity due to the 'dual-write' problem. Ensuring that data stays consistent between MongoDB and Elasticsearch is non-trivial, requiring proper error logging and potentially retry mechanisms if the ES index step fails after the DB write."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Develop Elasticsearch Query Builder",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: 1. Setting up the base bool query and pagination structure. 2. Implementing the 'must' fuzzy match clause for card names. 3. Implementing the strict 'filter' clauses for CMC, sets, and dates.",
+			"reasoning": "High complexity. Constructing an Elasticsearch Query DSL dynamically from API parameters involves understanding the difference between query context (scoring/fuzziness) and filter context (exact matches, caching), plus handling edge cases with ranges and empty parameters."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Define Search API Models",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Detail the properties, type hints, and Pydantic field validators for `CardSearchParams` and `CardSearchResponse`.",
+			"reasoning": "Low complexity. Standard Pydantic model definition with relatively simple data validation rules (e.g., max page size limits, optional fields)."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Implement GET /cards/search endpoint",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down into: 1. Creating the FastAPI route with dependency injection for the ES client and search params. 2. Parsing the ES `_source` hit results and mapping them into the `CardSearchResponse` structure.",
+			"reasoning": "Moderate complexity. Acts as the glue layer between the API routing, query builder, and Elasticsearch client. Requires carefully unpacking the ES response structure to fit the expected Pydantic response."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Integration Testing for Search Workflow",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: 1. Setting up the ES test fixture and mock data. 2. Creating an ingestion test step. 3. Querying various parameter combinations (fuzzy, filters). 4. Managing test teardown and index cleanup.",
+			"reasoning": "High complexity. E2E testing involving an external search engine requires handling async test fixtures, managing test-specific indices, and dealing with 'eventual consistency' (e.g., forcing an index refresh before asserting search results)."
+		}
+	]
+}
