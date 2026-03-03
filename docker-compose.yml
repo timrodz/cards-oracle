@@ -39,10 +39,24 @@ services:
       - mongo_atlas_config_data:/data/configdb
       - mongo_atlas_search_data:/data/mongot
     restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: >
+        mongosh --quiet --eval "
+          try {
+            if (rs.status().ok) {
+              quit(0);
+            }
+          } catch (e) {
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'localhost:27017' }]
+            });
+            quit(0);
+          }
+        "
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
 
   elasticsearch:
