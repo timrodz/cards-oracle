@@ -67,6 +67,11 @@ class AppSettings(BaseModel):
     embeddings_max_workers: int
 
 
+class ElasticsearchSettings(BaseModel):
+    url: str
+    index_name: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -102,6 +107,9 @@ class Settings(BaseSettings):
     llm_context_window_tokens: int = 4096
     llm_api_key: str | None = None
 
+    elasticsearch_url: str = "http://localhost:9200"
+    elasticsearch_index_name: str = "cards"
+
     @property
     def database_settings(self) -> DatabaseSettings:
         return DatabaseSettings(
@@ -110,6 +118,13 @@ class Settings(BaseSettings):
             cards_collection=self.mongodb_cards_collection,
             card_embeddings_collection=self.mongodb_card_embeddings_collection,
             batch_size=self.mongodb_batch_size,
+        )
+
+    @property
+    def elasticsearch_settings(self) -> ElasticsearchSettings:
+        return ElasticsearchSettings(
+            url=self.elasticsearch_url,
+            index_name=self.elasticsearch_index_name,
         )
 
     @property
@@ -151,5 +166,6 @@ def _get_settings() -> Settings:
 _settings = _get_settings()
 app_settings = _settings.app_settings
 db_settings = _settings.database_settings
+elasticsearch_settings = _settings.elasticsearch_settings
 embedding_settings = _settings.embedding_settings
 llm_settings = _settings.llm_settings
