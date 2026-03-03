@@ -5,11 +5,11 @@ from elasticsearch.helpers import async_bulk
 from loguru import logger
 
 from app.core.config import elasticsearch_settings
-from app.models.scryfall import ScryfallCard
+from app.models.db import ScryfallCardRecord
 
 
 async def index_cards(
-    cards: List[ScryfallCard], es: AsyncElasticsearch
+    cards: List[ScryfallCardRecord], es: AsyncElasticsearch
 ) -> Tuple[int, int]:
     """
     Indexes a list of ScryfallCard objects into Elasticsearch using bulk operations.
@@ -19,8 +19,8 @@ async def index_cards(
 
     actions: List[Dict[str, Any]] = []
     for card in cards:
-        # Convert Pydantic model to dict for Elasticsearch
-        card_data = card.model_dump()
+        # Convert Pydantic model to JSON-serializable dict for Elasticsearch
+        card_data = card.model_dump(mode="json")
 
         # Define the bulk action
         action = {
@@ -43,9 +43,9 @@ async def index_cards(
             stats_only=True,
             raise_on_error=False,
         )
-        
+
         success, errors = result
-        
+
         # Ensure errors is an int for the comparison and return
         error_count = errors if isinstance(errors, int) else len(errors)
 

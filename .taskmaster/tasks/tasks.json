@@ -66,10 +66,10 @@
       },
       {
         "id": 6,
-        "title": "Integrate Elasticsearch sync into the ingestion pipeline",
-        "description": "Update the existing MongoDB card ingestion logic to automatically trigger Elasticsearch indexing.",
-        "details": "Locate the ingestion logic (likely in `app/data_pipeline/` or `app/api/routes/ingest.py`). After the MongoDB `insert_many` or `bulk_write` operations succeed, call the `index_cards` service created in Task 5. Ensure this happens for both initial ingestion and updates.",
-        "testStrategy": "Trigger a card ingestion via the API or CLI. Query Elasticsearch `GET /cards/_count` to verify that the number of documents matches the number of ingested cards in MongoDB.",
+        "title": "Remove Elasticsearch sync from the ingestion pipeline",
+        "description": "Modify the existing MongoDB card ingestion logic to remove automatic Elasticsearch indexing.",
+        "details": "Locate the ingestion logic in `app/data_pipeline/ingestion/json_records.py` and the route in `app/api/routes/ingest.py`. Remove calls to `index_cards` and the dependency on the Elasticsearch client in the ingestion pipeline. Ensure `POST /data-pipeline/ingestion/json-records` only affects the MongoDB collection.",
+        "testStrategy": "Trigger a card ingestion via the API. Verify that records are added to MongoDB but NO new records appear in Elasticsearch `GET /cards/_count`.",
         "priority": "high",
         "dependencies": [
           5
@@ -118,15 +118,29 @@
         "subtasks": []
       },
       {
+        "id": 11,
+        "title": "Implement POST /cards/search/index endpoint",
+        "description": "Create a dedicated endpoint for indexing cards directly into Elasticsearch.",
+        "details": "In `app/api/routes/card_search.py`, add a `POST /index` endpoint. It should accept an `UploadFile` (JSON dataset). Reuse the logic from `app/services/card_indexer.py` to bulk-index the cards into the `cards` index in ES. This endpoint should NOT touch MongoDB.",
+        "testStrategy": "Post a JSON file to `/cards/search/index`. Verify that cards are searchable via `GET /cards/search` but are not present in MongoDB (if they weren't there already).",
+        "priority": "high",
+        "dependencies": [
+          5,
+          9
+        ],
+        "status": "completed",
+        "subtasks": []
+      },
+      {
         "id": 10,
         "title": "Integration Testing for Search Workflow",
-        "description": "End-to-end testing of the ingestion-to-search flow.",
-        "details": "Create `tests/api/routes/test_card_search.py`. Use `TestClient`. 1. Ingest a small set of known cards. 2. Perform various searches: fuzzy name match ('Ligtning' for 'Lightning'), CMC filter, and date range. 3. Assert response status codes, result counts, and data integrity of the returned cards.",
-        "testStrategy": "Run `pytest tests/api/routes/test_card_search.py`. Use a test-specific ES index if possible or clean up the index after tests.",
+        "description": "End-to-end testing of the separated ingestion and search flows.",
+        "details": "Update `tests/api/routes/test_card_search.py`. 1. Test `POST /data-pipeline/ingestion/json-records` and verify MongoDB update ONLY. 2. Test `POST /cards/search/index` and verify ES update ONLY. 3. Perform various searches to ensure the indexed data is queryable.",
+        "testStrategy": "Run `pytest tests/api/routes/test_card_search.py`.",
         "priority": "medium",
         "dependencies": [
           6,
-          9
+          11
         ],
         "status": "completed",
         "subtasks": []
@@ -134,8 +148,8 @@
     ],
     "metadata": {
       "created": "2026-03-03T09:03:03.398Z",
-      "updated": "2026-03-03T09:03:03.398Z",
-      "description": "Tasks for master context"
+      "updated": "2026-03-03T09:20:00.000Z",
+      "description": "Separated ES indexing from MongoDB ingestion"
     }
   }
 }

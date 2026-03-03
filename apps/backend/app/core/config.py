@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     app_cors_origins: str = "http://localhost:3000"
     app_embeddings_max_workers: int = 4
 
-    mongodb_uri: MongoDsn = MongoDsn("mongodb://localhost:27017/?directConnection=true")
+    mongodb_uri: MongoDsn = MongoDsn("mongodb://localhost:27017/?directConnection=true&readPreference=primaryPreferred&serverSelectionTimeoutMS=5000")
     mongodb_db_name: str = "mtg"
     mongodb_cards_collection: str = "cards"
     mongodb_card_embeddings_collection: str = "card_embeddings"

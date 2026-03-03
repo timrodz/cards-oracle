@@ -51,14 +51,16 @@ Add a structured card search system powered by Elasticsearch that complements th
 - [ ] Index is created on app startup if it does not already exist
 - [ ] `ruff`, `mypy`, `pytest` pass
 
-### US-004: Auto-sync cards to Elasticsearch on ingestion
-**Description:** As a developer, I want cards to be automatically indexed into Elasticsearch whenever they are ingested into MongoDB, so the search index stays up to date without manual intervention.
+### US-004: Dedicated Elasticsearch indexing endpoint
+**Description:** As a developer, I want a dedicated endpoint to index cards into Elasticsearch from the existing MongoDB collection, so I can sync the search index with the database.
 
 **Acceptance Criteria:**
-- [ ] After the existing MongoDB card ingestion completes (in `app/data_pipeline/` or the ingest route), cards are bulk-indexed into Elasticsearch
-- [ ] Bulk indexing uses the Elasticsearch document `_id` set to the card's Scryfall `id` (or MongoDB `_id` string) for idempotent upserts
-- [ ] Indexing errors for individual cards are logged (with `loguru`) but do not abort the batch
-- [ ] Re-ingesting the same cards updates existing ES documents rather than creating duplicates
+- [ ] New route `POST /cards/search/index` in `app/api/routes/card_search.py`
+- [ ] Endpoint reads all records from the MongoDB `cards` collection
+- [ ] Cards are bulk-indexed into Elasticsearch using the card's Scryfall `id` as the document `_id`
+- [ ] Indexing errors for individual cards are logged but do not abort the batch
+- [ ] Re-indexing the same cards updates existing ES documents
+- [ ] The existing `POST /data-pipeline/ingestion/json-records` no longer triggers Elasticsearch indexing
 - [ ] `ruff`, `mypy`, `pytest` pass
 
 ### US-005: Implement `GET /cards/search` endpoint
@@ -99,6 +101,7 @@ Add a structured card search system powered by Elasticsearch that complements th
 - [ ] Unit tests for the query builder: name-only query, name + single filter, name + all filters, pagination
 - [ ] Unit tests validate the Elasticsearch query structure (mocked ES client)
 - [ ] Integration test for `GET /cards/search` using FastAPI `TestClient` with mocked ES responses
+- [ ] Integration test for `POST /cards/search/index` to verify separate indexing
 - [ ] Tests live under `tests/core/test_card_search.py` and `tests/api/routes/test_card_search.py`
 - [ ] `pytest` passes
 
@@ -108,12 +111,13 @@ Add a structured card search system powered by Elasticsearch that complements th
 - FR-2: Elasticsearch connection URL is configurable via environment variable (`ELASTICSEARCH_URL`)
 - FR-3: The ES client is initialized during app startup (`lifespan`) and closed on shutdown
 - FR-4: A `cards` index is created on startup with appropriate mappings if it does not exist
-- FR-5: Cards are automatically bulk-indexed into ES after MongoDB ingestion, using upsert semantics
+- FR-5: A dedicated endpoint `POST /cards/search/index` handles bulk-indexing of cards from MongoDB into ES
 - FR-6: `GET /cards/search?query={name}` performs a fuzzy match on card name and returns full `ScryfallCard` objects
 - FR-7: Optional query params `cmc`, `set`, `released_at_from`, `released_at_to` narrow results via exact match or range filters
 - FR-8: Results are paginated with `page` and `page_size` params; response includes `total` count
 - FR-9: All search logic lives in `app/core/`, keeping the route handler thin
 - FR-10: Errors during individual card indexing are logged but do not block the batch
+- FR-11: `POST /data-pipeline/ingestion/json-records` only indexes data into MongoDB collection
 
 ## Non-Goals
 

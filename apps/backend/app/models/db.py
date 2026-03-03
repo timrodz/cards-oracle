@@ -31,3 +31,4 @@ class CardEmbeddingRecord(BaseModel):
 
 class ScryfallCardRecord(ScryfallCardBase):
     mongo_id: PydanticObjectId = Field(alias="_id")
+    id: str

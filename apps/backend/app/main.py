@@ -17,7 +17,16 @@ from app.models.api import HealthCheckResponse
 async def lifespan(app: FastAPI):
     logger.info("Starting up application: connecting to MongoDB.")
     uri = db_settings.uri.encoded_string()
-    mongo_client: MongoClient = MongoClient(uri)
+    mongo_client: MongoClient = MongoClient(uri, serverSelectionTimeoutMS=5000)
+    
+    try:
+        # Verify connectivity and node state
+        mongo_client.admin.command("ping")
+        logger.info("MongoDB ping successful.")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        # We don't raise here but we should log it clearly
+    
     app.state.mongo_client = mongo_client
 
     logger.info("Starting up application: connecting to Elasticsearch.")
