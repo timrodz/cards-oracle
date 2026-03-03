@@ -9,6 +9,7 @@ from loguru import logger
 
 from app.api.main import api_router
 from app.core.config import app_settings, db_settings
+from app.core.elasticsearch import get_elasticsearch_client, init_elasticsearch
 from app.models.api import HealthCheckResponse
 
 
@@ -18,9 +19,19 @@ async def lifespan(app: FastAPI):
     uri = db_settings.uri.encoded_string()
     mongo_client: MongoClient = MongoClient(uri)
     app.state.mongo_client = mongo_client
+
+    logger.info("Starting up application: connecting to Elasticsearch.")
+    es_client = get_elasticsearch_client()
+    app.state.es = es_client
+    await init_elasticsearch(es_client)
+
     yield
+
     logger.info("Shutting down application: closing MongoDB connection.")
     mongo_client.close()
+
+    logger.info("Shutting down application: closing Elasticsearch connection.")
+    await es_client.close()
 
 
 app = FastAPI(title="Card Oracle", lifespan=lifespan)
